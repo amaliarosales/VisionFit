@@ -637,29 +637,35 @@
         }
 
         btnShare.addEventListener('click', () => {
-            const langData = translations[languageSelector.value];
-            const targetArea = document.getElementById('workout-card-area');
-            
-            html2canvas(targetArea, { backgroundColor: "#0f0f12", logging: false, useCORS: true }).then(async (canvasSnapshot) => {
-                canvasSnapshot.toBlob(async (blob) => {
-                    const file = new File([blob], `VisionFit_Progress.png`, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: langData.share_title,
-                                text: `${langData.share_text} Burned ${txtCals.innerText} KCal! 🔥`
-                            });
-                            instructions.innerText = langData.share_success;
-                        } catch (err) {
-                            triggerLocalDownload(canvasSnapshot, langData);
-                        }
-                    } else {
-                        triggerLocalDownload(canvasSnapshot, langData);
-                    }
-                }, 'image/png');
-            });
-        });
+    const langData = translations[languageSelector.value];
+    const targetArea = document.getElementById('workout-card-area');
+    
+    // Mostramos que estamos procesando
+    instructions.innerText = "Processing image...";
+
+    html2canvas(targetArea, { backgroundColor: "#0f0f12", logging: false, useCORS: true }).then(async (canvasSnapshot) => {
+        // Primero intentamos la opción móvil (Share API)
+        if (navigator.canShare && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
+            canvasSnapshot.toBlob(async (blob) => {
+                const file = new File([blob], `VisionFit_Progress.png`, { type: 'image/png' });
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: langData.share_title,
+                        text: `${langData.share_text} Burned ${txtCals.innerText} KCal! 🔥`
+                    });
+                    instructions.innerText = langData.share_success;
+                } catch (err) {
+                    // Si el usuario cancela o hay error, descargamos localmente
+                    triggerLocalDownload(canvasSnapshot, langData);
+                }
+            }, 'image/png');
+        } else {
+            // Si estamos en PC, forzamos la descarga directa sin intentar abrir apps
+            triggerLocalDownload(canvasSnapshot, langData);
+        }
+    });
+});
 
         function triggerLocalDownload(canvas, langData) {
             const imageFile = canvas.toDataURL("image/png");
