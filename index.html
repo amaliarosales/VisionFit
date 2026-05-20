@@ -1611,7 +1611,57 @@
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({ image: videoElement }); }, width: 640, height: 480 });
 
         camera.start();
+// --- LÓGICA DE RECONOCIMIENTO DE VOZ (CONTROL TOTAL) ---
+function initVoiceControl() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        console.log("Reconocimiento de voz no soportado.");
+        return;
+    }
 
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = languageSelector.value === 'es' ? 'es-ES' : 'en-US';
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+        console.log("Comando recibido:", transcript);
+
+        // 1. Comando PAUSAR
+        if (transcript.includes("pausa") || transcript.includes("pause")) {
+            if (isWorkoutActive && !isWorkoutPaused) {
+                btnPause.click(); // Esto dispara tu función de pausa
+            }
+        } 
+        // 2. Comando CONTINUAR (o resumir)
+        else if (transcript.includes("continua") || transcript.includes("resume") || transcript.includes("sigue")) {
+            if (isWorkoutActive && isWorkoutPaused) {
+                btnPause.click(); // Como tu código usa el mismo botón para pausar/resumir, funciona igual
+            }
+        }
+        // 3. Comando STOP (o terminar)
+        else if (transcript.includes("stop") || transcript.includes("detener") || transcript.includes("terminar")) {
+            if (isWorkoutActive) {
+                forceFullStop();
+            }
+        }
+    };
+
+    recognition.onend = () => {
+        setTimeout(() => recognition.start(), 1000);
+    };
+
+    try {
+        recognition.start();
+    } catch (e) {
+        console.log("Micrófono bloqueado por el usuario.");
+    }
+}
+
+// Inicializamos al cargar la página
+initVoiceControl();
     </script>
 
 </body>
