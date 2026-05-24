@@ -1,92 +1,1717 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>VisionFit Engine v17.1 - Summary Goal Pro</title>
+
+    
+
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; position: relative; }
-        .lang-container { position: absolute; top: 15px; right: 20px; z-index: 100; }
-        .lang-select { background: #1a1a24; color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
-        .capture-zone { max-width: 760px; margin: 0 auto; background: #0f0f12; padding: 15px; border-radius: 16px; }
-        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
-        .config-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 15px; }
-        select, input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 5px; }
-        .stat-box { background: #222230; padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid #fff; }
-        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; }
-        .stat-lbl { font-size: 0.5rem; color: #aaa; text-transform: uppercase; }
-        .action-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .btn { color: white; border: none; padding: 12px 15px; font-weight: bold; border-radius: 8px; cursor: pointer; flex: 1; }
-        .video-container { position: relative; width: 100%; max-width: 640px; height: 480px; margin: 10px auto; }
-        #output_canvas { width: 100%; height: 100%; border-radius: 12px; }
-        .summary-receipt { background: #1e1e2a; border: 2px dashed #444; border-radius: 12px; padding: 20px; margin-top: 15px; display: none; text-align: left; }
+
+        body {
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: #0f0f12;
+
+            color: white;
+
+            text-align: center;
+
+            margin: 0;
+
+            padding: 10px;
+
+            position: relative;
+
+        }
+
+        
+
+        .lang-container {
+
+            position: absolute;
+
+            top: 15px;
+
+            right: 20px;
+
+            z-index: 100;
+
+        }
+
+        .lang-select {
+
+            background: #1a1a24;
+
+            color: #00ff88;
+
+            border: 1px solid #00ff88;
+
+            padding: 6px 12px;
+
+            border-radius: 20px;
+
+            font-size: 0.8rem;
+
+            font-weight: bold;
+
+            outline: none;
+
+            cursor: pointer;
+
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+
+            transition: all 0.2s;
+
+        }
+
+        .lang-select:hover {
+
+            background: #00ff88;
+
+            color: #0f0f12;
+
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+
+        }
+
+
+
+        h1 { margin-top: 10px; margin-bottom: 5px; color: #fff; font-size: 1.4rem;}
+
+        .status { color: #888; font-size: 0.9rem; margin-top: 0; }
+
+        
+
+        .capture-zone {
+
+            max-width: 760px;
+
+            margin: 0 auto;
+
+            background: #0f0f12;
+
+            padding: 15px;
+
+            border-radius: 16px;
+
+        }
+
+
+
+        .panel {
+
+            background: #1a1a24;
+
+            padding: 15px;
+
+            border-radius: 12px;
+
+            border: 1px solid #2a2a3a;
+
+            margin-bottom: 10px;
+
+        }
+
+        
+
+        .config-row {
+
+            display: grid;
+
+            grid-template-columns: repeat(5, 1fr);
+
+            gap: 12px;
+
+            margin-bottom: 15px;
+
+        }
+
+        @media (max-width: 720px) {
+
+            .config-row { grid-template-columns: repeat(2, 1fr); }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .config-row { grid-template-columns: 1fr; }
+
+        }
+
+        
+
+        .config-group {
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            width: 100%;
+
+        }
+
+        .config-group label {
+
+            font-size: 0.65rem;
+
+            color: #aaa;
+
+            margin-bottom: 6px;
+
+            text-transform: uppercase;
+
+            font-weight: bold;
+
+            width: 100%;
+
+            text-align: left;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+        }
+
+        
+
+        select, input {
+
+            background: #2a2a3a;
+
+            color: white;
+
+            border: 1px solid #444;
+
+            padding: 10px 12px;
+
+            border-radius: 6px;
+
+            font-size: 0.85rem;
+
+            outline: none;
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+            line-height: 1.2;
+
+        }
+
+        
+
+        .stats-grid {
+
+            display: grid;
+
+            grid-template-columns: repeat(6, 1fr);
+
+            gap: 6px;
+
+            margin-top: 5px;
+
+        }
+
+        @media (max-width: 768px) {
+
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+        }
+
+        .stat-box {
+
+            background: #222230;
+
+            padding: 8px 4px;
+
+            border-radius: 8px;
+
+            border-bottom: 3px solid #fff;
+
+        }
+
+        .box-reps { border-color: #00ff88; color: #00ff88; }
+
+        .box-time { border-color: #ffff00; color: #ffff00; }
+
+        .box-cals { border-color: #ff9f0a; color: #ff9f0a; }
+
+        .box-dist { border-color: #00bfff; color: #00bfff; }
+
+        .box-speed { border-color: #cc73ff; color: #cc73ff; }
+
+        .box-goal { border-color: #ff3b30; color: #ff5e55; }
+
+        
+
+        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; padding: 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .stat-lbl { font-size: 0.58rem; color: #aaa; text-transform: uppercase; }
+
+
+
+        .action-buttons {
+
+            display: flex;
+
+            gap: 8px;
+
+            margin-top: 10px;
+
+            flex-wrap: wrap;
+
+        }
+
+        .btn {
+
+            color: white;
+
+            border: none;
+
+            padding: 12px 15px;
+
+            font-size: 0.85rem;
+
+            font-weight: bold;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            flex: 1;
+
+            min-width: 110px;
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+            transition: background 0.2s, transform 0.1s;
+
+        }
+
+        .btn-start { background: #34c759; }
+
+        .btn-start:hover { background: #28a745; }
+
+        .btn-pause { background: #ff9f0a; }
+
+        .btn-pause:hover { background: #e08b00; }
+
+        .btn-stop { background: #ff3b30; }
+
+        .btn-stop:hover { background: #d9261c; }
+
+        .btn-share { background: #cc73ff; color: #0f0f12; }
+
+        .btn-share:hover { background: #b856ff; color: white;}
+
+        
+
+        .video-container {
+
+            position: relative;
+
+            width: 100%;
+
+            max-width: 640px;
+
+            height: 480px;
+
+            margin: 10px auto 0 auto;
+
+        }
+
+        #webcam { display: none; }
+
+        #output_canvas {
+
+            border-radius: 12px;
+
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+
+            background-color: #151518;
+
+            width: 100%;
+
+            height: 100%;
+
+        }
+
+
+
+        /* Ticket de Reporte Estilizado */
+
+        .summary-receipt {
+
+            background: #1e1e2a;
+
+            border: 2px dashed #444;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            margin-top: 15px;
+
+            text-align: left;
+
+            display: none;
+
+        }
+
+        .summary-receipt h3 { margin-top: 0; color: #00ff88; border-bottom: 1px solid #333; padding-bottom: 8px; text-transform: uppercase; font-size: 1.1rem; }
+
+        .receipt-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.9rem; color: #ddd; }
+
+        .receipt-total { display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid #555; padding-top: 10px; font-weight: bold; color: #00bfff; font-size: 1.05rem; }
+
+        
+
+        /* Caja resaltada para la meta de peso restante */
+
+        .receipt-goal-estimation {
+
+            background: rgba(255, 59, 48, 0.15);
+
+            border-left: 4px solid #ff3b30;
+
+            padding: 10px 12px;
+
+            margin-top: 12px;
+
+            border-radius: 4px;
+
+            font-size: 0.88rem;
+
+            color: #ff817b;
+
+            font-weight: 500;
+
+        }
+
     </style>
+
 </head>
+
 <body>
 
-    <div id="user-display" style="color: #00ff88; margin: 5px; font-weight: bold;"></div>
+
+
     <div class="lang-container">
+
         <select id="language-selector" class="lang-select">
-            <option value="en">English</option>
-            <option value="es" selected>Español</option>
+
+            <option value="en" selected>🌐 English</option>
+
+            <option value="es">🌐 Español</option>
+
         </select>
+
     </div>
 
-    <h1 id="main-title">VisionFit Tracker v17.1</h1>
+
+
+    <h1 id="main-title">VisionFit Tracker v17.1 ⚡ Global Summary</h1>
+
+    <p class="status" id="instructions">System Online. Press Start Workout to begin tracking.</p>
+
+    
+
     <div class="capture-zone" id="workout-card-area">
+
         <div class="panel">
+
             <div class="config-row">
-                <div class="config-group"><label>EXERCISE</label><select id="exercise-selector"></select></div>
-                <div class="config-group"><label>LOAD (KG)</label><input type="number" id="load-weight" value="10"></div>
-                <div class="config-group"><label>BODY WT (KG)</label><input type="number" id="body-weight" value="65"></div>
-                <div class="config-group"><label>HEIGHT (CM)</label><input type="number" id="user-height" value="165"></div>
-                <div class="config-group"><label>GOAL</label><select id="weight-goal"></select></div>
+
+                <div class="config-group">
+
+                    <label id="lbl-select-exercise">EXERCISE</label>
+
+                    <select id="exercise-selector">
+
+                        </select>
+
+                </div>
+
+                <div class="config-group">
+
+                    <label id="lbl-select-load">LOAD WEIGHT (KG)</label>
+
+                    <input type="number" id="load-weight" value="10" min="0" max="200">
+
+                </div>
+
+                <div class="config-group">
+
+                    <label id="lbl-select-userweight">YOUR WEIGHT (KG)</label>
+
+                    <input type="number" id="body-weight" value="65" min="30" max="250">
+
+                </div>
+
+                <div class="config-group">
+
+                    <label id="lbl-select-height">HEIGHT (CM)</label>
+
+                    <input type="number" id="user-height" value="165" min="100" max="230">
+
+                </div>
+
+                <div class="config-group">
+
+                    <label id="lbl-select-goal">WEIGHT GOAL</label>
+
+                    <select id="weight-goal">
+
+                        </select>
+
+                </div>
+
             </div>
+
+
+
             <div class="stats-grid">
-                <div class="stat-box"><span class="stat-val" id="val-reps">0</span><span class="stat-lbl" id="lbl-reps">REPS</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-time">00:00</span><span class="stat-lbl" id="lbl-time">TIME</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span><span class="stat-lbl" id="lbl-cals">KCAL</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-dist">0.0</span><span class="stat-lbl" id="lbl-dist">DIST</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-speed">0.0</span><span class="stat-lbl" id="lbl-speed">SPEED</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-goal-time">---</span><span class="stat-lbl" id="lbl-goal">GOAL</span></div>
+
+                <div class="stat-box box-reps">
+
+                    <span class="stat-val" id="val-reps">0</span>
+
+                    <span class="stat-lbl" id="lbl-reps">Dance Moves</span>
+
+                </div>
+
+                <div class="stat-box box-time">
+
+                    <span class="stat-val" id="val-time">00:00</span>
+
+                    <span class="stat-lbl" id="lbl-time">Time</span>
+
+                </div>
+
+                <div class="stat-box box-cals">
+
+                    <span class="stat-val" id="val-cals">0.0</span>
+
+                    <span class="stat-lbl" id="lbl-cals">Burned KCal</span>
+
+                </div>
+
+                <div class="stat-box box-dist">
+
+                    <span class="stat-val" id="val-dist">Active</span>
+
+                    <span class="stat-lbl" id="lbl-dist">Intensity</span>
+
+                </div>
+
+                <div class="stat-box box-speed">
+
+                    <span class="stat-val" id="val-speed">Tracking</span>
+
+                    <span class="stat-lbl" id="lbl-speed">Rhythm Status</span>
+
+                </div>
+
+                <div class="stat-box box-goal">
+
+                    <span class="stat-val" id="val-goal-time">Workout Stopped</span>
+
+                    <span class="stat-lbl" id="lbl-goal">Time to Goal</span>
+
+                </div>
+
             </div>
+
+            
+
             <div class="action-buttons">
-                <button class="btn" style="background:#34c759" id="btn-start">▶️ Start</button>
-                <button class="btn" style="background:#ff9f0a" id="btn-pause" disabled>⏸️ Pause</button>
-                <button class="btn" style="background:#ff3b30" id="btn-stop" disabled>🛑 Stop</button>
-                <button class="btn" style="background:#cc73ff" id="btn-share">🔗 Share</button>
+
+                <button class="btn btn-start" id="btn-start">▶️ Start Workout</button>
+
+                <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
+
+                <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop Full</button>
+
+                <button class="btn btn-share" id="btn-share">🔗 Share Workout Card</button>
+
             </div>
+
         </div>
-        <div id="receipt-container" class="summary-receipt"></div>
+
+
+
+        <div id="receipt-container" class="summary-receipt">
+
+            <h3 id="receipt-title">Workout Summary Report</h3>
+
+            <div id="receipt-breakdown"></div>
+
+            <div id="receipt-total-row" class="receipt-total"></div>
+
+            <div id="receipt-goal-estimation-box" class="receipt-goal-estimation"></div>
+
+        </div>
+
+
+
         <div class="video-container" id="camera-box">
+
             <video id="webcam" autoplay playsinline></video>
+
             <canvas id="output_canvas" width="640" height="480"></canvas>
+
         </div>
+
     </div>
+
+
 
     <script>
-        // --- 1. LÓGICA DE USUARIO Y LOCALSTORAGE ---
-        let userName = localStorage.getItem('visionFitUserName');
-        if (!userName) {
-            userName = prompt("¿Cómo te llamas?") || "Atleta";
-            localStorage.setItem('visionFitUserName', userName);
-        }
-        document.getElementById('user-display').innerText = "👤 " + userName;
 
-        let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
-        function saveHistory() { localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs)); }
+        const videoElement = document.getElementById('webcam');
 
-        // --- 2. PEGA AQUÍ TODO TU CÓDIGO ORIGINAL ---
-        // Debes pegar desde "const videoElement = document.getElementById('webcam');"
-        // hasta el final de tu script original.
+        const canvasElement = document.getElementById('output_canvas');
+
+        const canvasCtx = canvasElement.getContext('2d');
+
         
-        // RECUERDA: En tu función 'forceFullStop()', agrega esta línea:
-        // saveHistory(); 
 
+        const languageSelector = document.getElementById('language-selector');
+
+        const exerciseSelector = document.getElementById('exercise-selector');
+
+        const inputLoad = document.getElementById('load-weight');
+
+        const inputBodyWeight = document.getElementById('body-weight');
+
+        const inputHeight = document.getElementById('user-height');
+
+        const goalSelector = document.getElementById('weight-goal');
+
+        
+
+        const txtReps = document.getElementById('val-reps');
+
+        const txtTime = document.getElementById('val-time');
+
+        const txtCals = document.getElementById('val-cals');
+
+        const txtDist = document.getElementById('val-dist');
+
+        const txtSpeed = document.getElementById('val-speed');
+
+        const txtGoalTime = document.getElementById('val-goal-time');
+
+        
+
+        const lblReps = document.getElementById('lbl-reps');
+
+        const lblTime = document.getElementById('lbl-time');
+
+        const lblCals = document.getElementById('lbl-cals');
+
+        const lblDist = document.getElementById('lbl-dist');
+
+        const lblSpeed = document.getElementById('lbl-speed');
+
+        const lblGoal = document.getElementById('lbl-goal');
+
+        
+
+        const btnStart = document.getElementById('btn-start');
+
+        const btnPause = document.getElementById('btn-pause');
+
+        const btnStop = document.getElementById('btn-stop');
+
+        const btnShare = document.getElementById('btn-share');
+
+        const instructions = document.getElementById('instructions');
+
+        
+
+        const receiptContainer = document.getElementById('receipt-container');
+
+        const receiptBreakdown = document.getElementById('receipt-breakdown');
+
+        const receiptTotalRow = document.getElementById('receipt-total-row');
+
+        const receiptGoalEstimationBox = document.getElementById('receipt-goal-estimation-box');
+
+        const cameraBox = document.getElementById('camera-box');
+
+
+
+        let reps = 0; let totalCalories = 0.0; let speedTimeHistory = []; let workoutStartTime = Date.now();
+
+        let downMovement = false; let inwardMovement = false; let bikeOscillation = false; let legExtended = false; let stepExtended = false; 
+
+        let lastPositions = {}; let danceMoveThreshold = false;
+
+
+
+        let isWorkoutActive = false; let isWorkoutPaused = false; 
+
+        let activeExerciseSeconds = 0; let timerIntervalId = null; let currentExerciseKey = "dance";
+
+        let workoutHistoryLogs = {}; 
+
+
+
+        // Variable global para acumular el tiempo total neto de la sesión (en segundos)
+
+        let totalSessionSecondsAccumulated = 0;
+
+
+
+        // --- 🌐 LOCALIZATION DICTIONARY 🌐 ---
+
+        const translations = {
+
+            en: {
+
+                title: "VisionFit Tracker v17.1 ⚡ Global Summary",
+
+                init_msg: "System Online. Press Start Workout to begin tracking.",
+
+                start: "Workout Active! IA counters running.",
+
+                pause: "Workout Paused. Counters frozen.",
+
+                resume: "Workout Resumed! Tracking active.",
+
+                stop: "Workout Finished. Summary report created.",
+
+                measuring: "Measuring...", paused: "Paused", stopped: "Stopped", finished: "Finished", tracking: "Tracking", active: "Active",
+
+                lbl_ex: "EXERCISE", lbl_load: "LOAD WEIGHT (KG)", lbl_user: "YOUR WEIGHT (KG)", lbl_height: "HEIGHT (CM)", lbl_goal_opt: "WEIGHT GOAL",
+
+                btn_start: "▶️ Start Workout", btn_pause: "⏸️ Pause", btn_resume: "▶️ Resume", btn_stop: "🛑 Stop Full", btn_share: "🔗 Share Workout Card",
+
+                lbl_cals: "Burned KCal", lbl_goal: "Time to Goal", lbl_time: "Duration",
+
+                receipt_hd: "Workout Summary Report", receipt_tot: "TOTAL COMBINED SESSION",
+
+                metrics: {
+
+                    strength: { reps: "Repetitions", dist: "Load Applied", speed: "Tempo Pace" },
+
+                    cardio: { reps: "Steps Count", dist: "Distance", speed: "Speed" },
+
+                    dance: { reps: "Dance Moves", dist: "Intensity", speed: "Rhythm Status" }
+
+                },
+
+                exercises: {
+
+                    dance: "Dance / Full Body Rhythm", pec_fly: "Pec Deck Fly", squats: "Squats", pushups: "Push-ups",
+
+                    lat_pulldown: "Lat Pulldown", leg_extension: "Leg Extension", treadmill: "Treadmill / Walking", air_bike: "Air Bike"
+
+                },
+
+                goals: [
+
+                    { value: "0.5", label: "Lose 0.5 kg (~1.1 lbs)" }, { value: "1.0", label: "Lose 1.0 kg (~2.2 lbs)" },
+
+                    { value: "2.0", label: "Lose 2.0 kg (~4.4 lbs)" }, { value: "5.0", label: "Lose 5.0 kg (~11.0 lbs)" }
+
+                ],
+
+                share_title: "My VisionFit Workout", share_text: "Check out my progress!", share_success: "Shared successfully!", share_fallback: "Local Environment: Card saved to downloads gallery!"
+
+            },
+
+            es: {
+
+                title: "VisionFit Tracker v17.1 ⚡ Motor Global Pro",
+
+                init_msg: "Sistema En Línea. Presiona Iniciar Entrenamiento para contar.",
+
+                start: "¡Entrenamiento Activo! Contadores de IA ejecutándose.",
+
+                pause: "Entrenamiento Pausado. Captura congelada.",
+
+                resume: "¡Entrenamiento Reanudado! Captura activa.",
+
+                stop: "Entrenamiento Finalizado. Reporte de resumen creado.",
+
+                measuring: "Calculando...", paused: "Pausado", stopped: "Detenido", finished: "Terminado", tracking: "Rastreando", active: "Activo",
+
+                lbl_ex: "EJERCICIO", lbl_load: "PESO DE CARGA (KG)", lbl_user: "TU PESO (KG)", lbl_height: "ESTATURA (CM)", lbl_goal_opt: "META BAJAR",
+
+                btn_start: "▶️ Iniciar Récord", btn_pause: "⏸️ Pausar", btn_resume: "▶️ Continuar", btn_stop: "🛑 Detener Todo", btn_share: "🔗 Compartir Tarjeta",
+
+                lbl_cals: "KCal Quemadas", lbl_goal: "Tiempo para Meta", lbl_time: "Duración",
+
+                receipt_hd: "Reporte de Resumen de Entrenamiento", receipt_tot: "TOTAL COMBINADO DE SESIÓN",
+
+                metrics: {
+
+                    strength: { reps: "Repeticiones", dist: "Carga Aplicada", speed: "Ritmo Tempo" },
+
+                    cardio: { reps: "Total Pasos", dist: "Distancia", speed: "Velocidad" },
+
+                    dance: { reps: "Pasos de Baile", dist: "Intensidad", speed: "Estado del Ritmo" }
+
+                },
+
+                exercises: {
+
+                    dance: "Baile / Ritmo Cuerpo Completo", pec_fly: "Aperturas Pecho (Pec Deck)", squats: "Sentadillas (Squats)", pushups: "Lagartijas (Push-ups)",
+
+                    lat_pulldown: "Polea Espalda (Lat Pulldown)", leg_extension: "Extensión de Piernas", treadmill: "Caminadora / Trotar", air_bike: "Bici de Aire (Air Bike)"
+
+                },
+
+                goals: [
+
+                    { value: "0.5", label: "0.5 kg (~1.1 lbs)" }, { value: "1.0", label: "1.0 kg (~2.2 lbs)" },
+
+                    { value: "2.0", label: "2.0 kg (~4.4 lbs)" }, { value: "5.0", label: "5.0 kg (~11.0 lbs)" }
+
+                ],
+
+                share_title: "Mi Entrenamiento VisionFit", share_text: "¡Mira mi progreso del día!", share_success: "¡Compartido con éxito! 🎉", share_fallback: "Entorno Local: ¡Tarjeta guardada en descargas!"
+
+            }
+
+        };
+
+
+
+        function applyLanguage() {
+
+            const currentLang = languageSelector.value;
+
+            const langData = translations[currentLang];
+
+            const currentGoal = goalSelector.value || "1.0";
+
+
+
+            document.getElementById('main-title').innerText = langData.title;
+
+            if(!isWorkoutActive && receiptContainer.style.display !== "block") instructions.innerText = langData.init_msg;
+
+            
+
+            document.getElementById('lbl-select-exercise').innerText = langData.lbl_ex;
+
+            document.getElementById('lbl-select-load').innerText = langData.lbl_load;
+
+            document.getElementById('lbl-select-userweight').innerText = langData.lbl_user;
+
+            document.getElementById('lbl-select-height').innerText = langData.lbl_height;
+
+            document.getElementById('lbl-select-goal').innerText = langData.lbl_goal_opt;
+
+            
+
+            btnStart.innerText = langData.btn_start;
+
+            btnPause.innerText = isWorkoutPaused ? langData.btn_resume : langData.btn_pause;
+
+            btnStop.innerText = langData.btn_stop;
+
+            btnShare.innerText = langData.btn_share;
+
+            
+
+            lblCals.innerText = langData.lbl_cals;
+
+            lblGoal.innerText = langData.lbl_goal;
+
+            lblTime.innerText = langData.lbl_time;
+
+            document.getElementById('receipt-title').innerText = langData.receipt_hd;
+
+
+
+            exerciseSelector.innerHTML = "";
+
+            Object.keys(langData.exercises).forEach(key => {
+
+                let opt = document.createElement('option'); opt.value = key; opt.innerText = langData.exercises[key];
+
+                if(key === currentExerciseKey) opt.selected = true;
+
+                exerciseSelector.appendChild(opt);
+
+            });
+
+
+
+            goalSelector.innerHTML = "";
+
+            langData.goals.forEach(g => {
+
+                let opt = document.createElement('option'); opt.value = g.value; opt.innerText = g.label;
+
+                if(g.value === currentGoal) opt.selected = true;
+
+                goalSelector.appendChild(opt);
+
+            });
+
+
+
+            updateMetricLabels(currentExerciseKey);
+
+            if(!isWorkoutActive && receiptContainer.style.display === "block") buildFinalReceiptMarkup();
+
+        }
+
+
+
+        function updateMetricLabels(exerciseType) {
+
+            const langData = translations[languageSelector.value];
+
+            let mode = 'strength'; 
+
+            if (exerciseType === 'dance') mode = 'dance';
+
+            else if (exerciseType === 'treadmill' || exerciseType === 'air_bike') mode = 'cardio';
+
+
+
+            lblReps.innerText = langData.metrics[mode].reps;
+
+            lblDist.innerText = langData.metrics[mode].dist;
+
+            lblSpeed.innerText = langData.metrics[mode].speed;
+
+        }
+
+
+
+        languageSelector.addEventListener('change', applyLanguage);
+
+        applyLanguage();
+
+
+
+        function saveCurrentExerciseToHistory() {
+
+            if (reps > 0 || totalCalories > 0.01) {
+
+                if (!workoutHistoryLogs[currentExerciseKey]) {
+
+                    workoutHistoryLogs[currentExerciseKey] = { reps: 0, calories: 0, seconds: 0 };
+
+                }
+
+                workoutHistoryLogs[currentExerciseKey].reps += reps;
+
+                workoutHistoryLogs[currentExerciseKey].calories += parseFloat(txtCals.innerText) - Object.keys(workoutHistoryLogs).reduce((acc, k) => acc + (k !== currentExerciseKey ? workoutHistoryLogs[k].calories : 0), 0);
+
+                workoutHistoryLogs[currentExerciseKey].seconds += activeExerciseSeconds;
+
+            }
+
+        }
+
+
+
+        exerciseSelector.addEventListener('change', () => {
+
+            const nextEx = exerciseSelector.value;
+
+            const langData = translations[languageSelector.value];
+
+            
+
+            if (isWorkoutActive) {
+
+                saveCurrentExerciseToHistory();
+
+                totalSessionSecondsAccumulated += activeExerciseSeconds;
+
+                reps = 0; activeExerciseSeconds = 0;
+
+                txtReps.innerText = "0"; txtTime.innerText = "00:00";
+
+                
+
+                if (nextEx === 'dance') {
+
+                    txtDist.innerText = langData.active; txtSpeed.innerText = langData.tracking;
+
+                } else if (nextEx === 'treadmill' || nextEx === 'air_bike') {
+
+                    txtDist.innerText = "0.00 km"; txtSpeed.innerText = "0.0 km/h";
+
+                } else {
+
+                    txtDist.innerText = inputLoad.value + " kg"; txtSpeed.innerText = "1.0s";
+
+                }
+
+            }
+
+
+
+            currentExerciseKey = nextEx;
+
+            if (nextEx === 'air_bike' || nextEx === 'treadmill' || nextEx === 'dance') {
+
+                inputLoad.disabled = true; inputLoad.style.opacity = "0.4";
+
+            } else {
+
+                inputLoad.disabled = false; inputLoad.style.opacity = "1";
+
+            }
+
+            updateMetricLabels(nextEx);
+
+            if(!isWorkoutActive) receiptContainer.style.display = "none";
+
+        });
+
+
+
+        function runLiveTimer() {
+
+            if (isWorkoutActive && !isWorkoutPaused) {
+
+                activeExerciseSeconds++;
+
+                let mins = Math.floor(activeExerciseSeconds / 60);
+
+                let secs = activeExerciseSeconds % 60;
+
+                txtTime.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+
+                calculateGoalEstimation();
+
+            }
+
+        }
+
+
+
+        btnStart.addEventListener('click', () => {
+
+            const langData = translations[languageSelector.value];
+
+            reps = 0; totalCalories = 0.0; speedTimeHistory = []; lastPositions = {}; workoutStartTime = Date.now();
+
+            activeExerciseSeconds = 0; totalSessionSecondsAccumulated = 0;
+
+            workoutHistoryLogs = {}; currentExerciseKey = exerciseSelector.value;
+
+
+
+            txtReps.innerText = "0"; txtTime.innerText = "00:00"; txtCals.innerText = "0.0"; 
+
+            if (currentExerciseKey === 'dance') {
+
+                txtDist.innerText = langData.active; txtSpeed.innerText = langData.tracking;
+
+            } else if (currentExerciseKey === 'treadmill' || currentExerciseKey === 'air_bike') {
+
+                txtDist.innerText = "0.00 km"; txtSpeed.innerText = "0.0 km/h";
+
+            } else {
+
+                txtDist.innerText = inputLoad.value + " kg"; txtSpeed.innerText = "1.0s";
+
+            }
+
+            txtGoalTime.innerText = langData.measuring;
+
+            
+
+            isWorkoutActive = true; isWorkoutPaused = false;
+
+            btnPause.disabled = false; btnStop.disabled = false;
+
+            receiptContainer.style.display = "none"; cameraBox.style.display = "block";
+
+            instructions.innerText = langData.start;
+
+
+
+            if(timerIntervalId) clearInterval(timerIntervalId);
+
+            timerIntervalId = setInterval(runLiveTimer, 1000);
+
+        });
+
+
+
+        btnPause.addEventListener('click', () => {
+
+            const langData = translations[languageSelector.value];
+
+            if (isWorkoutActive && !isWorkoutPaused) {
+
+                isWorkoutPaused = true; btnPause.innerText = langData.btn_resume; instructions.innerText = langData.pause;
+
+                txtSpeed.innerText = langData.paused; txtGoalTime.innerText = langData.paused;
+
+            } else if (isWorkoutActive && isWorkoutPaused) {
+
+                isWorkoutPaused = false; btnPause.innerText = langData.btn_pause; instructions.innerText = langData.resume;
+
+                txtSpeed.innerText = exerciseSelector.value === 'dance' ? langData.tracking : "0.0 km/h";
+
+            }
+
+        });
+
+
+
+        btnStop.addEventListener('click', () => { forceFullStop(); });
+
+
+
+        function forceFullStop() {
+
+            const langData = translations[languageSelector.value];
+
+            if(timerIntervalId) clearInterval(timerIntervalId);
+
+            
+
+            saveCurrentExerciseToHistory();
+
+            totalSessionSecondsAccumulated += activeExerciseSeconds;
+
+
+
+            isWorkoutActive = false; isWorkoutPaused = false;
+
+            btnPause.disabled = true; btnStop.disabled = true;
+
+            instructions.innerText = langData.stop;
+
+            txtSpeed.innerText = langData.stopped; txtGoalTime.innerText = langData.finished;
+
+
+
+            cameraBox.style.display = "none";
+
+            buildFinalReceiptMarkup();
+
+            receiptContainer.style.display = "block";
+
+        }
+
+
+
+        function formatSecondsToMins(totalSecs) {
+
+            let m = Math.floor(totalSecs / 60); let s = totalSecs % 60;
+
+            return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s + " min";
+
+        }
+
+
+
+        // --- 🎯 CORE: BUILD FINAL SUMMARY MARKUP WITH DYNAMIC WEIGHT ESTIMATION IN ENGLISH 🎯 ---
+
+        function buildFinalReceiptMarkup() {
+
+            const langData = translations[languageSelector.value];
+
+            receiptBreakdown.innerHTML = "";
+
+            
+
+            let finalCombinedCalories = 0;
+
+            let finalCombinedReps = 0;
+
+
+
+            Object.keys(workoutHistoryLogs).forEach(key => {
+
+                const log = workoutHistoryLogs[key];
+
+                finalCombinedCalories += log.calories;
+
+                finalCombinedReps += log.reps;
+
+
+
+                let row = document.createElement('div');
+
+                row.className = "receipt-row";
+
+                row.innerHTML = `
+
+                    <span><strong>• ${langData.exercises[key] || key}:</strong></span>
+
+                    <span>${log.reps} U | ${log.calories.toFixed(1)} KCal | ${formatSecondsToMins(log.seconds)}</span>
+
+                `;
+
+                receiptBreakdown.appendChild(row);
+
+            });
+
+
+
+            receiptTotalRow.innerHTML = `
+
+                <span>🏆 ${langData.receipt_tot}:</span>
+
+                <span>${finalCombinedCalories.toFixed(1)} KCal | ${formatSecondsToMins(totalSessionSecondsAccumulated)}</span>
+
+            `;
+
+
+
+            // 🧮 CÁLCULO E INYECCIÓN DE LA ESTIMACIÓN DE META EN INGLÉS 🧮
+
+            const selectedGoalKg = parseFloat(goalSelector.value) || 1.0;
+
+            const selectedGoalLbs = (selectedGoalKg * 2.20462).toFixed(1);
+
+            const targetCaloriesToBurn = selectedGoalKg * 7700; // 1kg de grasa oxidada equivale a ~7700 KCal
+
+
+
+            if (finalCombinedCalories > 0.5 && totalSessionSecondsAccumulated > 2) {
+
+                const burnRatePerSecond = finalCombinedCalories / totalSessionSecondsAccumulated;
+
+                const remainingCaloriesNeeded = targetCaloriesToBurn - finalCombinedCalories;
+
+                
+
+                if (remainingCaloriesNeeded > 0) {
+
+                    const remainingSeconds = remainingCaloriesNeeded / burnRatePerSecond;
+
+                    const remHours = Math.floor(remainingSeconds / 3600);
+
+                    const remMins = Math.floor((remainingSeconds % 3600) / 60);
+
+                    
+
+                    let timeString = "";
+
+                    if (remHours > 0) {
+
+                        timeString = `${remHours} hours and ${remMins} minutes left`;
+
+                    } else {
+
+                        timeString = `${remMins} minutes left`;
+
+                    }
+
+
+
+                    // Forzado estrictamente en inglés como pide el requerimiento
+
+                    receiptGoalEstimationBox.innerHTML = `🎯 <strong>Estimation:</strong> ${timeString} of active workout at this pace to lose the remaining ${selectedGoalKg} kg (${selectedGoalLbs} lbs) target.`;
+
+                    receiptGoalEstimationBox.style.display = "block";
+
+                } else {
+
+                    receiptGoalEstimationBox.innerHTML = `🎉 <strong>Goal Reached!</strong> You have successfully burned enough calories for your weight target during this session!`;
+
+                    receiptGoalEstimationBox.style.display = "block";
+
+                }
+
+            } else {
+
+                receiptGoalEstimationBox.innerHTML = `🎯 <strong>Estimation:</strong> Incomplete session data to evaluate target weight remaining.`;
+
+                receiptGoalEstimationBox.style.display = "block";
+
+            }
+
+
+
+            // Sync boxes de arriba
+
+            txtCals.innerText = finalCombinedCalories.toFixed(1);
+
+            txtReps.innerText = finalCombinedReps;
+
+            let finalMins = Math.floor(totalSessionSecondsAccumulated / 60);
+
+            let finalSecs = totalSessionSecondsAccumulated % 60;
+
+            txtTime.innerText = (finalMins < 10 ? "0" : "") + finalMins + ":" + (finalSecs < 10 ? "0" : "") + finalSecs;
+
+        }
+
+
+
+        btnShare.addEventListener('click', () => {
+
+    const langData = translations[languageSelector.value];
+
+    const targetArea = document.getElementById('workout-card-area');
+
+    
+
+    // Mostramos que estamos procesando
+
+    instructions.innerText = "Processing image...";
+
+
+
+    html2canvas(targetArea, { backgroundColor: "#0f0f12", logging: false, useCORS: true }).then(async (canvasSnapshot) => {
+
+        // Primero intentamos la opción móvil (Share API)
+
+        if (navigator.canShare && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
+
+            canvasSnapshot.toBlob(async (blob) => {
+
+                const file = new File([blob], `VisionFit_Progress.png`, { type: 'image/png' });
+
+                try {
+
+                    await navigator.share({
+
+                        files: [file],
+
+                        title: langData.share_title,
+
+                        text: `${langData.share_text} Burned ${txtCals.innerText} KCal! 🔥`
+
+                    });
+
+                    instructions.innerText = langData.share_success;
+
+                } catch (err) {
+
+                    // Si el usuario cancela o hay error, descargamos localmente
+
+                    triggerLocalDownload(canvasSnapshot, langData);
+
+                }
+
+            }, 'image/png');
+
+        } else {
+
+            // Si estamos en PC, forzamos la descarga directa sin intentar abrir apps
+
+            triggerLocalDownload(canvasSnapshot, langData);
+
+        }
+
+    });
+
+});
+
+
+
+        function triggerLocalDownload(canvas, langData) {
+
+            const imageFile = canvas.toDataURL("image/png");
+
+            const downloadLink = document.createElement('a');
+
+            downloadLink.href = imageFile;
+
+            downloadLink.download = `VisionFit_Total_Progress.png`;
+
+            document.body.appendChild(downloadLink);
+
+            downloadLink.click();
+
+            document.body.removeChild(downloadLink);
+
+            instructions.innerText = langData.share_fallback;
+
+        }
+
+
+
+        function calculateAngle(A, B, C) { let radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x); let angle = Math.abs((radians * 180.0) / Math.PI); if (angle > 180.0) angle = 360 - angle; return angle; }
+
+        
+
+        function calculateGoalEstimation() { 
+
+            if (!isWorkoutActive || isWorkoutPaused || totalCalories <= 0.1 || activeExerciseSeconds < 3) return; 
+
+            const elapsedHours = (activeExerciseSeconds) / 3600; 
+
+            const hoursRemaining = (parseFloat(goalSelector.value) * 7700) / (totalCalories / elapsedHours); 
+
+            if (hoursRemaining > 500) { txtGoalTime.innerText = "+500h"; } 
+
+            else if (hoursRemaining < 1) { txtGoalTime.innerText = Math.round(hoursRemaining * 60) + " min"; } 
+
+            else { txtGoalTime.innerText = hoursRemaining.toFixed(1) + " hours"; } 
+
+        }
+
+        
+
+        function registerCycleForSpeed() { if(!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; const now = Date.now(); speedTimeHistory.push(now); speedTimeHistory = speedTimeHistory.filter(t => now - t < 4000); if (speedTimeHistory.length > 1) { const userHeightCm = parseFloat(inputHeight.value) || 165; let metersPerCycle = (exerciseSelector.value === 'air_bike') ? (userHeightCm / 100) * 1.5 : (userHeightCm / 100) * 0.415; txtSpeed.innerText = (((speedTimeHistory.length / 4) * metersPerCycle) * 3.6).toFixed(1) + " km/h"; } }
+
+        setInterval(() => { if (!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; if (speedTimeHistory.length > 0) { const now = Date.now(); speedTimeHistory = speedTimeHistory.filter(t => now - t < 4000); if (speedTimeHistory.length <= 1) { txtSpeed.innerText = "0.0 km/h"; } } }, 1000);
+
+        
+
+        function accumulateCalories(exerciseType) {
+
+            const bodyWt = parseFloat(inputBodyWeight.value) || 65; const loadWt = parseFloat(inputLoad.value) || 0; let totalWorkWeight = bodyWt; let met = 0; let estimatedDurationSeconds = 0;
+
+            if (exerciseType === 'squats') { met = 5.0; estimatedDurationSeconds = 2.5; } 
+
+            else if (exerciseType === 'pushups') { met = 4.0; estimatedDurationSeconds = 2.0; } 
+
+            else if (exerciseType === 'lat_pulldown') { met = 4.5 + (loadWt * 0.05); estimatedDurationSeconds = 2.2; totalWorkWeight += loadWt; } 
+
+            else if (exerciseType === 'pec_fly') { met = 4.0 + (loadWt * 0.05); estimatedDurationSeconds = 2.5; totalWorkWeight += loadWt; } 
+
+            else if (exerciseType === 'leg_extension') { met = 4.5 + (loadWt * 0.06); estimatedDurationSeconds = 2.3; totalWorkWeight += loadWt; } 
+
+            else if (exerciseType === 'treadmill') { met = 3.8; estimatedDurationSeconds = 0.8; } 
+
+            else if (exerciseType === 'air_bike') { met = 6.0; estimatedDurationSeconds = 1.0; } 
+
+            else if (exerciseType === 'dance') { met = 6.5; estimatedDurationSeconds = 1.1; } 
+
+            totalCalories += (met * 3.5 * totalWorkWeight / 200) * (estimatedDurationSeconds / 60); txtCals.innerText = totalCalories.toFixed(1);
+
+        }
+
+        
+
+        function updateDistance(totalCycles) { if(!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; const userHeightCm = parseFloat(inputHeight.value) || 165; let metersPerCycle = (exerciseSelector.value === 'air_bike') ? (userHeightCm / 100) * 1.5 : (userHeightCm / 100) * 0.415; txtDist.innerText = ((totalCycles * metersPerCycle) / 1000).toFixed(2) + " km"; }
+
+        function drawPoint(point, color) { canvasCtx.beginPath(); canvasCtx.arc(point.x * canvasElement.width, point.y * canvasElement.height, 5, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); }
+
+
+
+        function onResults(results) {
+
+            canvasCtx.save();
+
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+
+
+            if (results.poseLandmarks) {
+
+                const selectedExercise = exerciseSelector.value;
+
+                const hL = results.poseLandmarks[23]; const kL = results.poseLandmarks[25]; const aL = results.poseLandmarks[27];
+
+                const hR = results.poseLandmarks[24]; const kR = results.poseLandmarks[26]; const aR = results.poseLandmarks[28];
+
+                const shL = results.poseLandmarks[11]; const elL = results.poseLandmarks[13]; const wrL = results.poseLandmarks[15];
+
+                const shR = results.poseLandmarks[12]; const elR = results.poseLandmarks[14]; const wrR = results.poseLandmarks[16];
+
+
+
+                for(let i = 11; i <= 28; i++) {
+
+                    if(results.poseLandmarks[i] && results.poseLandmarks[i].visibility > 0.5) {
+
+                        drawPoint(results.poseLandmarks[i], selectedExercise === 'dance' ? '#cc73ff' : '#00ff88');
+
+                    }
+
+                }
+
+
+
+                if (!isWorkoutActive || isWorkoutPaused) { canvasCtx.restore(); return; }
+
+
+
+                if (selectedExercise === "dance") {
+
+                    const trackedNodes = [11, 12, 15, 16, 23, 24, 27, 28]; let totalVelocity = 0;
+
+                    trackedNodes.forEach(nodeId => {
+
+                        const currentPoint = results.poseLandmarks[nodeId];
+
+                        if (currentPoint && currentPoint.visibility > 0.5) {
+
+                            if (lastPositions[nodeId]) { totalVelocity += Math.sqrt(Math.pow(currentPoint.x - lastPositions[nodeId].x, 2) + Math.pow(currentPoint.y - lastPositions[nodeId].y, 2)); }
+
+                            lastPositions[nodeId] = { x: currentPoint.x, y: currentPoint.y };
+
+                        }
+
+                    });
+
+                    if (totalVelocity > 0.05) txtDist.innerText = totalVelocity > 0.18 ? "🔥 HIGH" : "⚡ MEDIUM";
+
+                    if (totalVelocity > 0.22 && !danceMoveThreshold) danceMoveThreshold = true;
+
+                    if (totalVelocity < 0.08 && danceMoveThreshold) { reps++; txtReps.innerText = reps; danceMoveThreshold = false; accumulateCalories('dance'); }
+
+                }
+
+                if (selectedExercise === "squats") {
+
+                    const hip = (hL.visibility > hR.visibility) ? hL : hR; const knee = (kL.visibility > kR.visibility) ? kL : kR; const ankle = (aL.visibility > aR.visibility) ? aL : aR;
+
+                    if (hip && knee && ankle) {
+
+                        const angle = calculateAngle(hip, knee, ankle);
+
+                        if (angle < 115 && !downMovement) downMovement = true;
+
+                        if (angle > 160 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('squats'); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "pushups") {
+
+                    const shoulder = (shL.visibility > shR.visibility) ? shL : shR; const elbow = (elL.visibility > elR.visibility) ? elL : elR; const wrist = (wrL.visibility > wrR.visibility) ? wrL : wrR;
+
+                    if (shoulder && elbow && wrist) {
+
+                        const angle = calculateAngle(shoulder, elbow, wrist);
+
+                        if (angle < 95 && !downMovement) downMovement = true;
+
+                        if (angle > 155 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('pushups'); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "lat_pulldown") {
+
+                    const wrist = (wrL.visibility > wrR.visibility) ? wrL : wrR; const shoulder = (shL.visibility > shR.visibility) ? shL : shR; const hip = (hL.visibility > hR.visibility) ? hL : hR;
+
+                    if (wrist && shoulder && hip) {
+
+                        let dist = Math.sqrt(Math.pow(wrist.x - hip.x, 2) + Math.pow(wrist.y - hip.y, 2));
+
+                        if (dist < 0.22 && !downMovement) downMovement = true;
+
+                        if (dist > 0.42 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('lat_pulldown'); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "pec_fly") {
+
+                    if (wrL && wrR) {
+
+                        let horizontalSeparationX = Math.abs(wrL.x - wrR.x);
+
+                        txtSpeed.innerText = (horizontalSeparationX * 2).toFixed(1) + "s";
+
+                        if (horizontalSeparationX < 0.12 && !inwardMovement) inwardMovement = true;
+
+                        if (horizontalSeparationX > 0.45 && inwardMovement) { reps++; txtReps.innerText = reps; inwardMovement = false; accumulateCalories('pec_fly'); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "leg_extension") {
+
+                    const hip = (hL.visibility > hR.visibility) ? hL : hR; const knee = (kL.visibility > kR.visibility) ? kL : kR; const ankle = (aL.visibility > aR.visibility) ? aL : aR;
+
+                    if (hip && knee && ankle) {
+
+                        const kneeAngle = calculateAngle(hip, knee, ankle);
+
+                        if (kneeAngle > 160 && !legExtended) legExtended = true;
+
+                        if (kneeAngle < 110 && legExtended) { reps++; txtReps.innerText = reps; legExtended = false; accumulateCalories('leg_extension'); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "treadmill") {
+
+                    if (kL && kR && aL && aR) {
+
+                        const kneeAngleL = calculateAngle(hL, kL, aL); const kneeAngleR = calculateAngle(hR, kR, aR);
+
+                        if ((kneeAngleL < 142 || kneeAngleR < 142) && !stepExtended) stepExtended = true;
+
+                        if (kneeAngleL > 165 && kneeAngleR > 165 && stepExtended) { reps++; txtReps.innerText = reps; stepExtended = false; accumulateCalories('treadmill'); updateDistance(reps); registerCycleForSpeed(); }
+
+                    }
+
+                }
+
+                if (selectedExercise === "air_bike") {
+
+                    const bikeElbow = (elL.visibility > elR.visibility) ? elL : elR;
+
+                    if (bikeElbow) {
+
+                        if (bikeElbow.y < 0.4 && !bikeOscillation) bikeOscillation = true;
+
+                        if (bikeElbow.y > 0.6 && bikeOscillation) { reps++; txtReps.innerText = reps; bikeOscillation = false; accumulateCalories('air_bike'); updateDistance(reps); registerCycleForSpeed(); }
+
+                    }
+
+                }
+
+            }
+
+            canvasCtx.restore();
+
+        }
+
+
+
+        const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+
+        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+
+        pose.onResults(onResults);
+
+
+
+        const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({ image: videoElement }); }, width: 640, height: 480 });
+
+        camera.start();
+// --- LÓGICA DE RECONOCIMIENTO DE VOZ (CONTROL TOTAL) ---
+function initVoiceControl() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        console.log("Reconocimiento de voz no soportado.");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = languageSelector.value === 'es' ? 'es-ES' : 'en-US';
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+        console.log("Comando recibido:", transcript);
+
+        // 1. Comando PAUSAR
+        if (transcript.includes("pausa") || transcript.includes("pause")) {
+            if (isWorkoutActive && !isWorkoutPaused) {
+                btnPause.click(); // Esto dispara tu función de pausa
+            }
+        } 
+        // 2. Comando CONTINUAR (o resumir)
+        else if (transcript.includes("continua") || transcript.includes("resume") || transcript.includes("sigue")) {
+            if (isWorkoutActive && isWorkoutPaused) {
+                btnPause.click(); // Como tu código usa el mismo botón para pausar/resumir, funciona igual
+            }
+        }
+        // 3. Comando STOP (o terminar)
+        else if (transcript.includes("stop") || transcript.includes("detener") || transcript.includes("terminar")) {
+            if (isWorkoutActive) {
+                forceFullStop();
+            }
+        }
+    };
+
+    recognition.onend = () => {
+        setTimeout(() => recognition.start(), 1000);
+    };
+
+    try {
+        recognition.start();
+    } catch (e) {
+        console.log("Micrófono bloqueado por el usuario.");
+    }
+}
+
+// Inicializamos al cargar la página
+initVoiceControl();
     </script>
+
 </body>
-</html>
+
+</html> 
+
+
+<div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88;"></div>
+
+<script>
+    // --- NUEVA LÓGICA DE USUARIO Y LOCALSTORAGE ---
+    let userName = localStorage.getItem('visionFitUserName');
+    if (!userName) {
+        userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
+        localStorage.setItem('visionFitUserName', userName);
+    }
+    document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
+
+    // Cargar historial al iniciar
+    let savedHistory = localStorage.getItem('visionFitHistory');
+    let workoutHistoryLogs = savedHistory ? JSON.parse(savedHistory) : {};
+
+    function saveHistoryToLocalStorage() {
+        localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
+    }
+
+    // --- MODIFICA TU FUNCIÓN forceFullStop EXISTENTE PARA ESTO ---
+    function forceFullStop() {
+        const langData = translations[languageSelector.value];
+        if(timerIntervalId) clearInterval(timerIntervalId);
+        
+        saveCurrentExerciseToHistory();
+        totalSessionSecondsAccumulated += activeExerciseSeconds;
+
+        // GUARDADO AUTOMÁTICO
+        saveHistoryToLocalStorage();
+
+        isWorkoutActive = false; isWorkoutPaused = false;
+        btnPause.disabled = true; btnStop.disabled = true;
+        instructions.innerText = langData.stop + " (Saved to history)";
+        txtSpeed.innerText = langData.stopped; 
+        txtGoalTime.innerText = langData.finished;
+
+        cameraBox.style.display = "none";
+        buildFinalReceiptMarkup();
+        receiptContainer.style.display = "block";
+    }
+
+    // ... [MANTÉN EL RESTO DE TU CÓDIGO ORIGINAL AQUÍ] ...
+
+    // TIP: Para ver el historial en consola en cualquier momento, 
+    // puedes llamar a: console.log(JSON.parse(localStorage.getItem('visionFitHistory')));
+</script>
