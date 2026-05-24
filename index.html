@@ -3386,13 +3386,29 @@ initVoiceControl();
     }
 
 
+// Cargar datos guardados al iniciar
+window.addEventListener('load', () => {
+    // 1. Cargar Ajustes
+    const savedSettings = localStorage.getItem('visionFitSettings');
+    if (savedSettings) {
+        const s = JSON.parse(savedSettings);
+        if(s.exercise) exerciseSelector.value = s.exercise;
+        if(s.loadWeight) inputLoad.value = s.loadWeight;
+        if(s.bodyWeight) inputBodyWeight.value = s.bodyWeight;
+        if(s.height) inputHeight.value = s.height;
+        if(s.goal) goalSelector.value = s.goal;
+        
+        // Esto es para que el programa detecte el cambio de ejercicio
+        currentExerciseKey = exerciseSelector.value;
+        applyLanguage(); 
+    }
 
-    // ... [MANTÉN EL RESTO DE TU CÓDIGO ORIGINAL AQUÍ] ...
-
-
-
-    // TIP: Para ver el historial en consola en cualquier momento, 
-
-    // puedes llamar a: console.log(JSON.parse(localStorage.getItem('visionFitHistory')));
+    // 2. Cargar Historial
+    const savedHistory = localStorage.getItem('visionFitHistory');
+    if (savedHistory) {
+        workoutHistoryLogs = JSON.parse(savedHistory);
+        console.log("Historial cargado correctamente");
+    }
+});
 
 </script>
