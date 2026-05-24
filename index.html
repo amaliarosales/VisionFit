@@ -2222,15 +2222,6 @@
     buildFinalReceiptMarkup();
     receiptContainer.style.display = "block";
 }
-    
-    function buildFinalReceiptMarkup() {
-        const saved = localStorage.getItem('visionFitHistory');
-    if (saved) workoutHistoryLogs = JSON.parse(saved);
-
-    const langData = translations[languageSelector.value];
-    receiptBreakdown.innerHTML = "";
-
-
 
         function formatSecondsToMins(totalSecs) {
 
