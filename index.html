@@ -2226,13 +2226,13 @@
         workoutHistoryLogs = JSON.parse(freshHistory);
     }
     
-    buildFinalReceiptMarkup();
-    receiptContainer.style.display = "block";
-}
+    function buildFinalReceiptMarkup() {
+    // Agregar esta línea al principio de la función para mayor seguridad:
+    const saved = localStorage.getItem('visionFitHistory');
+    if (saved) workoutHistoryLogs = JSON.parse(saved);
 
-
-
-
+    const langData = translations[languageSelector.value];
+    receiptBreakdown.innerHTML = "";
 
 
 
