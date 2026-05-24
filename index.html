@@ -2190,18 +2190,16 @@
 
 
 
-        function forceFullStop() {
+    function forceFullStop() {
     const langData = translations[languageSelector.value];
     if(timerIntervalId) clearInterval(timerIntervalId);
     
-    // 1. Guardar la sesión actual en el objeto de historial
     saveCurrentExerciseToHistory();
     totalSessionSecondsAccumulated += activeExerciseSeconds;
 
-    // 2. Guardar el objeto actualizado en localStorage
+    // --- AQUÍ ESTÁ EL GUARDADO ---
     localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
     
-    // 3. Guardar ajustes
     const settings = {
         exercise: exerciseSelector.value,
         loadWeight: inputLoad.value,
@@ -2210,21 +2208,20 @@
         goal: goalSelector.value
     };
     localStorage.setItem('visionFitSettings', JSON.stringify(settings));
+    // -----------------------------
 
-    isWorkoutActive = false; isWorkoutPaused = false;
-    btnPause.disabled = true; btnStop.disabled = true;
+    isWorkoutActive = false; 
+    isWorkoutPaused = false;
+    btnPause.disabled = true; 
+    btnStop.disabled = true;
     instructions.innerText = langData.stop;
     txtSpeed.innerText = langData.stopped; 
     txtGoalTime.innerText = langData.finished;
 
     cameraBox.style.display = "none";
-    
-    // 4. IMPORTANTE: Antes de construir el reporte, 
-    // nos aseguramos de que el reporte lea el localStorage actualizado
-    const freshHistory = localStorage.getItem('visionFitHistory');
-    if (freshHistory) {
-        workoutHistoryLogs = JSON.parse(freshHistory);
-    }
+    buildFinalReceiptMarkup();
+    receiptContainer.style.display = "block";
+}
     
     function buildFinalReceiptMarkup() {
     // Agregar esta línea al principio de la función para mayor seguridad:
