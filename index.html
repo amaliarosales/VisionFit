@@ -2241,84 +2241,34 @@ function forceFullStop() {
 
 
 
-        function buildFinalReceiptMarkup() {
+       function buildFinalReceiptMarkup() {
+    // 1. CARGAMOS EL HISTORIAL MÁS RECIENTE
+    const saved = localStorage.getItem('visionFitHistory');
+    if (saved) workoutHistoryLogs = JSON.parse(saved);
 
+    const langData = translations[languageSelector.value];
+    receiptBreakdown.innerHTML = "";
+    
+    let finalCombinedCalories = 0;
+    let finalCombinedReps = 0;
 
+    // 2. ITERAMOS SOBRE EL HISTORIAL
+    Object.keys(workoutHistoryLogs).forEach(key => {
+        const log = workoutHistoryLogs[key];
+        
+        // Si el log es un objeto de sesión guardada (y no el formato antiguo)
+        // Puedes añadir aquí una lógica para mostrar cada sesión individualmente
+        finalCombinedCalories += log.calories || 0;
+        finalCombinedReps += log.reps || 0;
 
-            const langData = translations[languageSelector.value];
-
-
-
-            receiptBreakdown.innerHTML = "";
-
-
-
-            
-
-
-
-            let finalCombinedCalories = 0;
-
-
-
-            let finalCombinedReps = 0;
-
-
-
-
-
-
-
-            Object.keys(workoutHistoryLogs).forEach(key => {
-
-
-
-                const log = workoutHistoryLogs[key];
-
-
-
-                finalCombinedCalories += log.calories;
-
-
-
-                finalCombinedReps += log.reps;
-
-
-
-
-
-
-
-                let row = document.createElement('div');
-
-
-
-                row.className = "receipt-row";
-
-
-
-                row.innerHTML = `
-
-
-
-                    <span><strong>• ${langData.exercises[key] || key}:</strong></span>
-
-
-
-                    <span>${log.reps} U | ${log.calories.toFixed(1)} KCal | ${formatSecondsToMins(log.seconds)}</span>
-
-
-
-                `;
-
-
-
-                receiptBreakdown.appendChild(row);
-
-
-
-            });
-
+        let row = document.createElement('div');
+        row.className = "receipt-row";
+        row.innerHTML = `
+            <span><strong>• ${langData.exercises[key] || key}:</strong></span>
+            <span>${log.reps || 0} U | ${(log.calories || 0).toFixed(1)} KCal | ${formatSecondsToMins(log.seconds || 0)}</span>
+        `;
+        receiptBreakdown.appendChild(row);
+    });
 
 
 
