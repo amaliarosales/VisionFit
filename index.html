@@ -1672,23 +1672,63 @@ initVoiceControl();
 <div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88;"></div>
 
 <script>
-    // --- NUEVA LÓGICA DE USUARIO Y LOCALSTORAGE ---
-    let userName = localStorage.getItem('visionFitUserName');
-    if (!userName) {
-        userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
-        localStorage.setItem('visionFitUserName', userName);
-    }
-    document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
+   <div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88;"></div>
 
-    // Cargar historial al iniciar
-    let savedHistory = localStorage.getItem('visionFitHistory');
-    let workoutHistoryLogs = savedHistory ? JSON.parse(savedHistory) : {};
+<script>
+    // --- LÓGICA DE PERSISTENCIA UNIFICADA ---
+    
+    // 1. Cargar datos al inicio
+    window.addEventListener('DOMContentLoaded', () => {
+        // Cargar Usuario
+        let userName = localStorage.getItem('visionFitUserName');
+        if (!userName) {
+            userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
+            localStorage.setItem('visionFitUserName', userName);
+        }
+        document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
 
+        // Cargar Historial
+        let savedHistory = localStorage.getItem('visionFitHistory');
+        window.workoutHistoryLogs = savedHistory ? JSON.parse(savedHistory) : {};
+
+        // Cargar Ajustes (Settings)
+        const savedSettings = localStorage.getItem('visionFitSettings');
+        if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            if(settings.exercise) exerciseSelector.value = settings.exercise;
+            if(settings.loadWeight) inputLoad.value = settings.loadWeight;
+            if(settings.bodyWeight) inputBodyWeight.value = settings.bodyWeight;
+            if(settings.height) inputHeight.value = settings.height;
+            if(settings.goal) goalSelector.value = settings.goal;
+            // Actualizar variables internas
+            currentExerciseKey = exerciseSelector.value;
+            applyLanguage();
+        }
+    });
+
+    // 2. Funciones de guardado
     function saveHistoryToLocalStorage() {
         localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
     }
 
-    // --- MODIFICA TU FUNCIÓN forceFullStop EXISTENTE PARA ESTO ---
+    function saveSettingsToLocalStorage() {
+        const settings = {
+            exercise: exerciseSelector.value,
+            loadWeight: inputLoad.value,
+            bodyWeight: inputBodyWeight.value,
+            height: inputHeight.value,
+            goal: goalSelector.value
+        };
+        localStorage.setItem('visionFitSettings', JSON.stringify(settings));
+    }
+
+    // 3. Listener para guardar cambios automáticamente
+    [exerciseSelector, inputLoad, inputBodyWeight, inputHeight, goalSelector].forEach(element => {
+        element.addEventListener('change', saveSettingsToLocalStorage);
+    });
+
+    // 4. Integración en forceFullStop
+    // Nota: Reemplaza tu función forceFullStop anterior por esta
     function forceFullStop() {
         const langData = translations[languageSelector.value];
         if(timerIntervalId) clearInterval(timerIntervalId);
@@ -1696,12 +1736,12 @@ initVoiceControl();
         saveCurrentExerciseToHistory();
         totalSessionSecondsAccumulated += activeExerciseSeconds;
 
-        // GUARDADO AUTOMÁTICO
-        saveHistoryToLocalStorage();
+        saveHistoryToLocalStorage(); // Guardar historial
+        saveSettingsToLocalStorage(); // Guardar ajustes finales
 
         isWorkoutActive = false; isWorkoutPaused = false;
         btnPause.disabled = true; btnStop.disabled = true;
-        instructions.innerText = langData.stop + " (Saved to history)";
+        instructions.innerText = langData.stop + " (Saved)";
         txtSpeed.innerText = langData.stopped; 
         txtGoalTime.innerText = langData.finished;
 
@@ -1709,9 +1749,4 @@ initVoiceControl();
         buildFinalReceiptMarkup();
         receiptContainer.style.display = "block";
     }
-
-    // ... [MANTÉN EL RESTO DE TU CÓDIGO ORIGINAL AQUÍ] ...
-
-    // TIP: Para ver el historial en consola en cualquier momento, 
-    // puedes llamar a: console.log(JSON.parse(localStorage.getItem('visionFitHistory')));
 </script>
