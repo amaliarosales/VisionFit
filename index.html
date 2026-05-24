@@ -1672,23 +1672,41 @@ initVoiceControl();
 <div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88; text-align: center;"></div>
 
 <script>
-    console.log("VisionFit: Cargando sistema de usuario...");
+    // Inicializamos la variable global donde se guardan los datos
+    window.workoutHistoryLogs = {};
 
     window.addEventListener('DOMContentLoaded', () => {
-        // Cargar nombre
+        // 1. Manejo del Nombre
         let userName = localStorage.getItem('visionFitUserName');
-        
-        // Si no existe, lo pedimos
         if (!userName) {
             userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
             localStorage.setItem('visionFitUserName', userName);
         }
-        
-        // Mostrar nombre
-        const profileDiv = document.getElementById('user-profile');
-        if (profileDiv) {
-            profileDiv.innerText = "👤 Atleta: " + userName;
+        document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
+
+        // 2. RECUPERACIÓN DEL HISTORIAL (Aquí está la clave)
+        const savedHistory = localStorage.getItem('visionFitHistory');
+        if (savedHistory) {
+            window.workoutHistoryLogs = JSON.parse(savedHistory);
+            console.log("Historial recuperado:", window.workoutHistoryLogs);
+        } else {
+            console.log("No hay historial previo.");
         }
-        console.log("VisionFit: Usuario cargado -> " + userName);
     });
+
+    // Esta función es la que debes llamar cuando termines un entrenamiento
+    // para asegurar que lo nuevo se sume a lo viejo
+    function saveHistoryToLocalStorage(newEntry) {
+        // Obtenemos lo actual
+        let currentLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
+        
+        // Añadimos la nueva sesión (usando un timestamp como clave única)
+        const timestamp = new Date().toISOString();
+        currentLogs[timestamp] = newEntry;
+        
+        // Guardamos todo de vuelta
+        localStorage.setItem('visionFitHistory', JSON.stringify(currentLogs));
+        window.workoutHistoryLogs = currentLogs;
+        console.log("Historial actualizado y guardado.");
+    }
 </script>
