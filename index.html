@@ -3,75 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VisionFit Tracker</title>
+    <title>VisionFit Tracker v17.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; }
-        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin: 10px auto; max-width: 400px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .stat-box { background: #222230; padding: 10px; border-radius: 8px; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; display: block; }
-        .btn { border: none; padding: 15px; font-size: 1rem; border-radius: 8px; cursor: pointer; color: white; width: 100%; margin: 5px 0; }
+        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin-bottom: 10px; max-width: 400px; margin: 10px auto; }
+        .btn { padding: 12px; margin: 5px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: bold; }
         .btn-start { background: #34c759; } .btn-pause { background: #ff9f0a; } .btn-stop { background: #ff3b30; }
+        #output_canvas { width: 100%; max-width: 400px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
-    <div id="user-profile" style="color: #00ff88; font-weight: bold; margin: 10px;"></div>
+    <div id="user-profile" style="color: #00ff88; font-weight: bold; margin-bottom: 5px;"></div>
     <h1>VisionFit Tracker</h1>
-    
+    <p id="instructions">Presiona Start para comenzar.</p>
+
     <div class="panel">
-        <div class="stats-grid">
-            <div class="stat-box"><span class="stat-val" id="val-reps">0</span>Reps</div>
-            <div class="stat-box"><span class="stat-val" id="val-time">00:00</span>Time</div>
-            <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span>KCal</div>
-        </div>
+        <div id="val-reps" style="font-size: 2rem;">0</div>
         <button class="btn btn-start" id="btn-start">▶️ Start</button>
-        <button class="btn btn-pause" id="btn-pause">⏸️ Pause</button>
-        <button class="btn btn-stop" id="btn-stop">🛑 Stop</button>
+        <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
+        <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop</button>
     </div>
 
-    <div id="history-panel" class="panel" style="display:none; text-align: left;">
-        <h3>Historial:</h3>
-        <div id="history-list"></div>
-    </div>
+    <div id="camera-box"><canvas id="output_canvas" width="640" height="480"></canvas></div>
 
     <script>
-        // 1. Perfil y Historial
-        let userName = localStorage.getItem('visionFitUserName') || "Amalia";
+        // 1. LÓGICA DE USUARIO Y STORAGE
+        let userName = localStorage.getItem('visionFitUserName') || prompt("¿Cómo te llamas?") || "Atleta";
+        localStorage.setItem('visionFitUserName', userName);
         document.getElementById('user-profile').innerText = "👤 " + userName;
-        let logs = JSON.parse(localStorage.getItem('visionFitHistory')) || [];
 
-        // 2. Elementos
+        let history = JSON.parse(localStorage.getItem('visionFitHistory')) || [];
+
+        // 2. VARIABLES
+        let isWorkoutActive = false, isWorkoutPaused = false, reps = 0;
         const btnStart = document.getElementById('btn-start'), btnPause = document.getElementById('btn-pause'), btnStop = document.getElementById('btn-stop');
-        let isRunning = false;
 
-        // 3. Funciones Básicas
-        btnStart.onclick = () => { isRunning = true; alert("Iniciando..."); };
-        btnPause.onclick = () => { alert("Pausado"); };
-        
-        btnStop.onclick = () => {
-            isRunning = false;
-            let log = { date: new Date().toLocaleDateString(), reps: document.getElementById('val-reps').innerText };
-            logs.push(log);
-            localStorage.setItem('visionFitHistory', JSON.stringify(logs));
-            document.getElementById('history-panel').style.display = 'block';
-            document.getElementById('history-list').innerHTML += `<p>${log.date}: ${log.reps} reps</p>`;
-            alert("Entrenamiento guardado");
-        };
+        // 3. FUNCIONES DE CONTROL
+        function forceFullStop() {
+            isWorkoutActive = false;
+            let entry = { date: new Date().toLocaleString(), reps: reps };
+            history.push(entry);
+            localStorage.setItem('visionFitHistory', JSON.stringify(history));
+            alert("Entrenamiento guardado: " + reps + " reps");
+            location.reload(); // Recarga para limpiar pantalla
+        }
 
-        // 4. Voz
+        btnStart.onclick = () => { isWorkoutActive = true; btnPause.disabled = false; btnStop.disabled = false; };
+        btnPause.onclick = () => { isWorkoutPaused = !isWorkoutPaused; btnPause.innerText = isWorkoutPaused ? "▶️ Resume" : "⏸️ Pause"; };
+        btnStop.onclick = forceFullStop;
+
+        // 4. VOZ
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             const rec = new SpeechRecognition();
             rec.continuous = true;
             rec.onresult = (e) => {
                 const cmd = e.results[e.results.length-1][0].transcript.toLowerCase();
-                if(cmd.includes("start")) btnStart.click();
-                if(cmd.includes("pausa")) btnPause.click();
-                if(cmd.includes("stop")) btnStop.click();
+                if(cmd.includes("pausa") && isWorkoutActive) btnPause.click();
+                if(cmd.includes("sigue") && isWorkoutPaused) btnPause.click();
+                if(cmd.includes("stop")) forceFullStop();
             };
             rec.start();
         }
+
+        // 5. MEDIAPIPE (Tu lógica original de onResults debe ir aquí dentro)
+        const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+        pose.onResults((results) => {
+            if (isWorkoutActive && !isWorkoutPaused && results.poseLandmarks) {
+                // Aquí iría tu lógica de detección de ejercicios para sumar a 'reps'
+                // Ejemplo: reps++; document.getElementById('val-reps').innerText = reps;
+            }
+        });
     </script>
 </body>
 </html>
