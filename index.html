@@ -4,88 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VisionFit Engine v17.1 - Summary Goal Pro</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; position: relative; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; }
         .lang-container { position: absolute; top: 15px; right: 20px; z-index: 100; }
-        .lang-select { background: #1a1a24; color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; outline: none; cursor: pointer; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); transition: all 0.2s; }
-        h1 { margin-top: 10px; margin-bottom: 5px; color: #fff; font-size: 1.4rem;}
-        .status { color: #888; font-size: 0.9rem; margin-top: 0; }
+        .lang-select { background: #1a1a24; color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+        #user-profile { margin: 10px; font-size: 1.1rem; color: #00ff88; font-weight: bold; }
         .capture-zone { max-width: 760px; margin: 0 auto; background: #0f0f12; padding: 15px; border-radius: 16px; }
         .panel { background: #1a1a24; padding: 15px; border-radius: 12px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
         .config-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 15px; }
-        .config-group label { font-size: 0.65rem; color: #aaa; margin-bottom: 6px; text-transform: uppercase; font-weight: bold; width: 100%; text-align: left; }
-        select, input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 10px 12px; border-radius: 6px; font-size: 0.85rem; width: 100%; box-sizing: border-box; }
-        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 5px; }
-        .stat-box { background: #222230; padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid #fff; }
-        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; padding: 4px 0; }
-        .stat-lbl { font-size: 0.58rem; color: #aaa; text-transform: uppercase; }
-        .action-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .btn { color: white; border: none; padding: 12px 15px; font-size: 0.85rem; font-weight: bold; border-radius: 8px; cursor: pointer; flex: 1; min-width: 110px; }
-        .btn-start { background: #34c759; }
-        .btn-pause { background: #ff9f0a; }
-        .btn-stop { background: #ff3b30; }
-        .btn-share { background: #cc73ff; color: #0f0f12; }
-        .video-container { position: relative; width: 100%; max-width: 640px; height: 480px; margin: 10px auto 0 auto; }
-        #webcam { display: none; }
-        #output_canvas { border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); background-color: #151518; width: 100%; height: 100%; }
-        .summary-receipt { background: #1e1e2a; border: 2px dashed #444; border-radius: 12px; padding: 20px; margin-top: 15px; text-align: left; display: none; }
-        .receipt-total { display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid #555; padding-top: 10px; font-weight: bold; color: #00bfff; }
+        select, input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        .stat-box { background: #222230; padding: 8px; border-radius: 8px; border-bottom: 3px solid #fff; }
+        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; }
+        .stat-lbl { font-size: 0.5rem; color: #aaa; text-transform: uppercase; }
+        .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { border: none; padding: 12px; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; flex: 1; }
+        .video-container { position: relative; width: 100%; max-width: 640px; height: 480px; margin: 10px auto; }
+        #output_canvas { width: 100%; height: 100%; border-radius: 12px; }
+        .summary-receipt { background: #1e1e2a; padding: 20px; border-radius: 12px; display: none; margin-top: 15px; text-align: left; }
     </style>
 </head>
 <body>
 
     <div class="lang-container">
         <select id="language-selector" class="lang-select">
-            <option value="en" selected>🌐 English</option>
-            <option value="es">🌐 Español</option>
+            <option value="en">🌐 English</option>
+            <option value="es" selected>🌐 Español</option>
         </select>
     </div>
 
-    <!-- Contenedor de nombre -->
-    <div id="user-profile" style="margin: 10px; font-size: 1.1rem; color: #00ff88; font-weight: bold;"></div>
+    <div id="user-profile"></div>
+    <h1 id="main-title">VisionFit Tracker v17.1</h1>
+    <p id="instructions">System Online.</p>
 
-    <h1 id="main-title">VisionFit Tracker v17.1 ⚡ Global Summary</h1>
-    <p class="status" id="instructions">System Online. Press Start Workout to begin tracking.</p>
-    
     <div class="capture-zone" id="workout-card-area">
         <div class="panel">
             <div class="config-row">
-                <div class="config-group"><label id="lbl-select-exercise">EXERCISE</label><select id="exercise-selector"></select></div>
-                <div class="config-group"><label id="lbl-select-load">LOAD WEIGHT (KG)</label><input type="number" id="load-weight" value="10"></div>
-                <div class="config-group"><label id="lbl-select-userweight">YOUR WEIGHT (KG)</label><input type="number" id="body-weight" value="65"></div>
-                <div class="config-group"><label id="lbl-select-height">HEIGHT (CM)</label><input type="number" id="user-height" value="165"></div>
-                <div class="config-group"><label id="lbl-select-goal">WEIGHT GOAL</label><select id="weight-goal"></select></div>
+                <div class="config-group"><label>EXERCISE</label><select id="exercise-selector"></select></div>
+                <div class="config-group"><label>LOAD (KG)</label><input type="number" id="load-weight" value="10"></div>
+                <div class="config-group"><label>BODY WT (KG)</label><input type="number" id="body-weight" value="65"></div>
+                <div class="config-group"><label>HEIGHT (CM)</label><input type="number" id="user-height" value="165"></div>
+                <div class="config-group"><label>GOAL</label><select id="weight-goal"></select></div>
             </div>
-
             <div class="stats-grid">
-                <div class="stat-box"><span class="stat-val" id="val-reps">0</span><span class="stat-lbl" id="lbl-reps">Moves</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-time">00:00</span><span class="stat-lbl" id="lbl-time">Time</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span><span class="stat-lbl" id="lbl-cals">KCal</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-dist">Active</span><span class="stat-lbl" id="lbl-dist">Dist</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-speed">Tracking</span><span class="stat-lbl" id="lbl-speed">Speed</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-goal-time">Stopped</span><span class="stat-lbl" id="lbl-goal">Goal</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-reps">0</span><span class="stat-lbl">REPS</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-time">00:00</span><span class="stat-lbl">TIME</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span><span class="stat-lbl">KCAL</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-dist">0.0</span><span class="stat-lbl">DIST</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-speed">0.0</span><span class="stat-lbl">SPEED</span></div>
+                <div class="stat-box"><span class="stat-val" id="val-goal-time">---</span><span class="stat-lbl">GOAL</span></div>
             </div>
-            
             <div class="action-buttons">
-                <button class="btn btn-start" id="btn-start">▶️ Start Workout</button>
-                <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
-                <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop Full</button>
-                <button class="btn btn-share" id="btn-share">🔗 Share Workout Card</button>
+                <button class="btn" style="background:#34c759" id="btn-start">▶️ Start</button>
+                <button class="btn" style="background:#ff9f0a" id="btn-pause" disabled>⏸️ Pause</button>
+                <button class="btn" style="background:#ff3b30" id="btn-stop" disabled>🛑 Stop</button>
+                <button class="btn" style="background:#cc73ff" id="btn-share">🔗 Share</button>
             </div>
         </div>
-
-        <div id="receipt-container" class="summary-receipt">
-            <h3 id="receipt-title">Workout Summary Report</h3>
-            <div id="receipt-breakdown"></div>
-            <div id="receipt-total-row" class="receipt-total"></div>
-            <div id="receipt-goal-estimation-box" style="margin-top:10px;"></div>
-        </div>
-
+        <div id="receipt-container" class="summary-receipt"></div>
         <div class="video-container" id="camera-box">
             <video id="webcam" autoplay playsinline></video>
             <canvas id="output_canvas" width="640" height="480"></canvas>
@@ -93,89 +72,33 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN E INICIALIZACIÓN ---
+        // --- 1. Inicialización de Usuario y LocalStorage ---
         let userName = localStorage.getItem('visionFitUserName');
         if (!userName) {
-            userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
+            userName = prompt("¿Cómo te llamas?") || "Atleta";
             localStorage.setItem('visionFitUserName', userName);
         }
         document.getElementById('user-profile').innerText = "👤 " + userName;
 
-        let savedHistory = localStorage.getItem('visionFitHistory');
-        let workoutHistoryLogs = savedHistory ? JSON.parse(savedHistory) : {};
+        let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
 
-        function saveHistoryToLocalStorage() {
+        function saveHistory() {
             localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
         }
 
-        // --- VARIABLES Y DOM ---
-        const videoElement = document.getElementById('webcam');
-        const canvasElement = document.getElementById('output_canvas');
-        const canvasCtx = canvasElement.getContext('2d');
-        const languageSelector = document.getElementById('language-selector');
-        const exerciseSelector = document.getElementById('exercise-selector');
-        const inputLoad = document.getElementById('load-weight');
-        const inputBodyWeight = document.getElementById('body-weight');
-        const inputHeight = document.getElementById('user-height');
-        const goalSelector = document.getElementById('weight-goal');
-        const txtReps = document.getElementById('val-reps');
-        const txtTime = document.getElementById('val-time');
-        const txtCals = document.getElementById('val-cals');
-        const txtDist = document.getElementById('val-dist');
-        const txtSpeed = document.getElementById('val-speed');
-        const txtGoalTime = document.getElementById('val-goal-time');
-        const lblReps = document.getElementById('lbl-reps');
-        const lblTime = document.getElementById('lbl-time');
-        const lblCals = document.getElementById('lbl-cals');
-        const lblDist = document.getElementById('lbl-dist');
-        const lblSpeed = document.getElementById('lbl-speed');
-        const lblGoal = document.getElementById('lbl-goal');
-        const btnStart = document.getElementById('btn-start');
-        const btnPause = document.getElementById('btn-pause');
-        const btnStop = document.getElementById('btn-stop');
-        const btnShare = document.getElementById('btn-share');
-        const instructions = document.getElementById('instructions');
-        const receiptContainer = document.getElementById('receipt-container');
-        const receiptBreakdown = document.getElementById('receipt-breakdown');
-        const receiptTotalRow = document.getElementById('receipt-total-row');
-        const receiptGoalEstimationBox = document.getElementById('receipt-goal-estimation-box');
-        const cameraBox = document.getElementById('camera-box');
-
-        let reps = 0; let totalCalories = 0.0; let speedTimeHistory = [];
-        let isWorkoutActive = false; let isWorkoutPaused = false; 
-        let activeExerciseSeconds = 0; let timerIntervalId = null; let currentExerciseKey = "dance";
-        let totalSessionSecondsAccumulated = 0;
-
-        const translations = { /* ... manten tu diccionario de traducciones aquí ... */ };
+        // --- 2. Variables y Funciones Originales (Resto del código) ---
+        // (Aquí debes pegar el resto de tu lógica original, asegurándote de llamar a saveHistory() dentro de forceFullStop)
         
-        // --- FUNCIONES CORE ---
-        function saveCurrentExerciseToHistory() {
-            if (reps > 0 || totalCalories > 0.01) {
-                if (!workoutHistoryLogs[currentExerciseKey]) {
-                    workoutHistoryLogs[currentExerciseKey] = { reps: 0, calories: 0, seconds: 0 };
-                }
-                workoutHistoryLogs[currentExerciseKey].reps += reps;
-                workoutHistoryLogs[currentExerciseKey].calories += totalCalories;
-                workoutHistoryLogs[currentExerciseKey].seconds += activeExerciseSeconds;
-            }
-        }
-
         function forceFullStop() {
-            if(timerIntervalId) clearInterval(timerIntervalId);
+            // ... tu lógica original ...
             saveCurrentExerciseToHistory();
-            totalSessionSecondsAccumulated += activeExerciseSeconds;
-            saveHistoryToLocalStorage(); // GUARDADO EN LOCAL STORAGE
-
+            saveHistory(); // Guardado automático
+            
             isWorkoutActive = false;
-            btnPause.disabled = true; btnStop.disabled = true;
-            cameraBox.style.display = "none";
-            receiptContainer.style.display = "block";
-            instructions.innerText = "Workout Saved! (History in LocalStorage)";
+            // ... resto de tu función ...
         }
 
-        // --- CÓDIGO RESTANTE (POSE, CÁLCULOS, EVENTOS) ---
-        // ... (Mantén tu lógica de pose, cronómetro y voz intacta aquí) ...
-
+        // Asegúrate de que las funciones como 'onResults', 'runLiveTimer', etc., sigan definidas abajo.
     </script>
 </body>
 </html>
