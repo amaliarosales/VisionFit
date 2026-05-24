@@ -2054,7 +2054,8 @@
 
 
 
-            workoutHistoryLogs = {}; currentExerciseKey = exerciseSelector.value;
+           workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
+currentExerciseKey = exerciseSelector.value;
 
 
 
