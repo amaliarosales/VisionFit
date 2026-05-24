@@ -1673,39 +1673,31 @@ initVoiceControl();
 <div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88; text-align: center;"></div>
 
 <script>
-    // Función centralizada para guardar
-    window.guardarSesionCompleta = function(datos) {
-        let historial = JSON.parse(localStorage.getItem('visionFitHistory') || "[]");
-        historial.push({
-            fecha: new Date().toLocaleString(),
-            ...datos
-        });
-        localStorage.setItem('visionFitHistory', JSON.stringify(historial));
-        console.log("Sesión guardada exitosamente:", historial);
-        alert("¡Sesión guardada!"); 
-    };
-    // Cargar datos guardados al iniciar
-window.addEventListener('load', () => {
-    // 1. Cargar Ajustes
-    const savedSettings = localStorage.getItem('visionFitSettings');
-    if (savedSettings) {
-        const s = JSON.parse(savedSettings);
-        if(s.exercise) exerciseSelector.value = s.exercise;
-        if(s.loadWeight) inputLoad.value = s.loadWeight;
-        if(s.bodyWeight) inputBodyWeight.value = s.bodyWeight;
-        if(s.height) inputHeight.value = s.height;
-        if(s.goal) goalSelector.value = s.goal;
-        
-        // Esto es para que el programa detecte el cambio de ejercicio
-        currentExerciseKey = exerciseSelector.value;
-        applyLanguage(); 
-    }
+    window.addEventListener('DOMContentLoaded', () => {
+        // --- 1. MANEJO DEL NOMBRE ---
+        let userName = localStorage.getItem('visionFitUserName');
+        if (!userName) {
+            userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
+            localStorage.setItem('visionFitUserName', userName);
+        }
+        document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
 
-    // 2. Cargar Historial
-    const savedHistory = localStorage.getItem('visionFitHistory');
-    if (savedHistory) {
-        workoutHistoryLogs = JSON.parse(savedHistory);
-        console.log("Historial cargado correctamente");
-    }
-});
+        // --- 2. CARGA DE AJUSTES Y CONFIGURACIÓN ---
+        const savedSettings = localStorage.getItem('visionFitSettings');
+        if (savedSettings) {
+            const s = JSON.parse(savedSettings);
+            if(s.exercise) { exerciseSelector.value = s.exercise; currentExerciseKey = s.exercise; }
+            if(s.loadWeight) inputLoad.value = s.loadWeight;
+            if(s.bodyWeight) inputBodyWeight.value = s.bodyWeight;
+            if(s.height) inputHeight.value = s.height;
+            if(s.goal) goalSelector.value = s.goal;
+            applyLanguage();
+        }
+
+        // --- 3. CARGA DEL HISTORIAL ---
+        const savedHistory = localStorage.getItem('visionFitHistory');
+        if (savedHistory) {
+            window.workoutHistoryLogs = JSON.parse(savedHistory);
+        }
+    });
 </script>
