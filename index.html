@@ -6,7 +6,6 @@
     <title>VisionFit Engine v17.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #0f0f12; color: white; text-align: center; padding: 10px; }
         .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin: 10px auto; max-width: 400px; border: 1px solid #2a2a3a; }
@@ -15,17 +14,11 @@
         .stat-val { font-size: 1.2rem; font-weight: bold; display: block; color: #00ff88; }
         .btn { padding: 12px; margin: 5px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100%; }
         .btn-start { background: #34c759; } .btn-pause { background: #ff9f0a; } .btn-stop { background: #ff3b30; }
-        input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div id="user-profile" style="color: #00ff88; font-weight: bold;"></div>
-    <div class="panel">
-        <label style="font-size: 0.7rem; color: #aaa;">NOMBRE DE ATLETA</label>
-        <input type="text" id="user-name-input" placeholder="Tu nombre..." onchange="saveName()">
-    </div>
-
+    <div id="user-profile" style="color: #00ff88; font-weight: bold;">👤 Amalia</div>
     <h1>VisionFit Tracker</h1>
     
     <div class="panel">
@@ -35,60 +28,39 @@
             <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span>KCAL</div>
         </div>
         <button class="btn btn-start" id="btn-start">▶️ Start</button>
-        <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
-        <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop</button>
+        <button class="btn btn-pause" id="btn-pause">⏸️ Pause</button>
+        <button class="btn btn-stop" id="btn-stop">🛑 Stop</button>
     </div>
 
+    <video id="webcam" style="display:none;" autoplay playsinline></video>
     <canvas id="output_canvas" width="640" height="480" style="max-width: 400px; border-radius: 12px;"></canvas>
 
     <script>
-        // 1. LÓGICA DE USUARIO
-        const nameInput = document.getElementById('user-name-input');
-        function saveName() {
-            localStorage.setItem('visionFitUserName', nameInput.value);
-            document.getElementById('user-profile').innerText = "👤 " + nameInput.value;
+        let reps = 0, isWorkoutActive = false, isPaused = false;
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        // --- FUNCIONES BOTONES ---
+        document.getElementById('btn-start').onclick = () => { isWorkoutActive = true; alert("Iniciado"); };
+        document.getElementById('btn-pause').onclick = () => { isPaused = !isPaused; };
+        document.getElementById('btn-stop').onclick = () => { isWorkoutActive = false; alert("Guardado: " + reps); location.reload(); };
+
+        // --- LÓGICA DE IA (MEDIAPIPE) ---
+        function onResults(results) {
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            
+            if (isWorkoutActive && !isPaused && results.poseLandmarks) {
+                // AQUÍ VA TU LÓGICA DE MOVIMIENTO ORIGINAL
+                // Ejemplo: if (criterio) { reps++; document.getElementById('val-reps').innerText = reps; }
+            }
         }
-        window.onload = () => {
-            let saved = localStorage.getItem('visionFitUserName') || "Amalia";
-            nameInput.value = saved;
-            document.getElementById('user-profile').innerText = "👤 " + saved;
-        };
 
-        // 2. VARIABLES DE CONTROL
-        let isWorkoutActive = false, isWorkoutPaused = false, reps = 0;
-        const btnStart = document.getElementById('btn-start'), btnPause = document.getElementById('btn-pause'), btnStop = document.getElementById('btn-stop');
-
-        // 3. FUNCIONES DE BOTONES
-        btnStart.onclick = () => { 
-            isWorkoutActive = true; 
-            btnPause.disabled = false; btnStop.disabled = false;
-            alert("Entrenamiento iniciado"); 
-        };
-
-        btnPause.onclick = () => { 
-            isWorkoutPaused = !isWorkoutPaused; 
-            btnPause.innerText = isWorkoutPaused ? "▶️ Resume" : "⏸️ Pause"; 
-        };
-
-        btnStop.onclick = () => {
-            isWorkoutActive = false;
-            alert("Resumen guardado: " + reps + " reps");
-            location.reload();
-        };
-
-        // 4. VOZ
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const rec = new SpeechRecognition();
-            rec.continuous = true;
-            rec.onresult = (e) => {
-                const cmd = e.results[e.results.length-1][0].transcript.toLowerCase();
-                if(cmd.includes("start")) btnStart.click();
-                if(cmd.includes("pausa") || cmd.includes("pause")) btnPause.click();
-                if(cmd.includes("stop") || cmd.includes("detener")) btnStop.click();
-            };
-            rec.start();
-        }
+        const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+        pose.onResults(onResults);
+        const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({ image: videoElement }); }, width: 640, height: 480 });
+        camera.start();
     </script>
 </body>
 </html>
