@@ -1094,41 +1094,49 @@
 
 
 
-        function forceFullStop() {
+ function forceFullStop() {
     const langData = translations[languageSelector.value];
-    if(timerIntervalId) clearInterval(timerIntervalId);
+    if (timerIntervalId) clearInterval(timerIntervalId);
     
-    // 1. Guardar la sesión actual en el objeto de historial
+    // Guardamos la sesión actual en nuestro objeto de memoria
     saveCurrentExerciseToHistory();
     totalSessionSecondsAccumulated += activeExerciseSeconds;
 
-    // 2. Guardar el objeto actualizado en localStorage
-    localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
+    // 1. Guardar/Actualizar Historial (Lista de últimas 5)
+    let historial = JSON.parse(localStorage.getItem('visionFitHistory') || "[]");
     
-    // 3. Guardar ajustes
-    const settings = {
+    // Crear objeto de sesión actual
+    const sesionActual = {
+        fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(),
+        resumen: JSON.parse(JSON.stringify(workoutHistoryLogs)),
+        totalKcal: txtCals.innerText,
+        totalTime: txtTime.innerText
+    };
+    
+    historial.push(sesionActual);
+    if (historial.length > 5) historial.shift(); // Mantiene solo 5
+    localStorage.setItem('visionFitHistory', JSON.stringify(historial));
+
+    // 2. Guardar Ajustes
+    localStorage.setItem('visionFitSettings', JSON.stringify({
         exercise: exerciseSelector.value,
         loadWeight: inputLoad.value,
         bodyWeight: inputBodyWeight.value,
         height: inputHeight.value,
         goal: goalSelector.value
-    };
-    localStorage.setItem('visionFitSettings', JSON.stringify(settings));
+    }));
 
+    // 3. UI
     isWorkoutActive = false; isWorkoutPaused = false;
     btnPause.disabled = true; btnStop.disabled = true;
     instructions.innerText = langData.stop;
     txtSpeed.innerText = langData.stopped; 
     txtGoalTime.innerText = langData.finished;
-
     cameraBox.style.display = "none";
     
-    // 4. IMPORTANTE: Antes de construir el reporte, 
-    // nos aseguramos de que el reporte lea el localStorage actualizado
-    const freshHistory = localStorage.getItem('visionFitHistory');
-    if (freshHistory) {
-        workoutHistoryLogs = JSON.parse(freshHistory);
-    }
+    buildFinalReceiptMarkup();
+    receiptContainer.style.display = "block";
+}
     
     buildFinalReceiptMarkup();
     receiptContainer.style.display = "block";
@@ -1147,55 +1155,25 @@
 
         // --- 🎯 CORE: BUILD FINAL SUMMARY MARKUP WITH DYNAMIC WEIGHT ESTIMATION IN ENGLISH 🎯 ---
 
-        function buildFinalReceiptMarkup() {
+      function buildFinalReceiptMarkup() {
+    const langData = translations[languageSelector.value];
+    const historial = JSON.parse(localStorage.getItem('visionFitHistory') || "[]");
+    
+    receiptBreakdown.innerHTML = "<h3>📊 Historial (Últimas 5)</h3>";
+    
+    // Recorremos el historial guardado
+    historial.forEach((s, i) => {
+        let row = document.createElement('div');
+        row.className = "receipt-row";
+        row.style.borderBottom = "1px solid #333";
+        row.style.padding = "5px 0";
+        row.innerHTML = `<span>#${i+1} ${s.fecha}</span> <span>${s.totalKcal} KCal | ${s.totalTime}</span>`;
+        receiptBreakdown.appendChild(row);
+    });
 
-            const langData = translations[languageSelector.value];
-
-            receiptBreakdown.innerHTML = "";
-
-            
-
-            let finalCombinedCalories = 0;
-
-            let finalCombinedReps = 0;
-
-
-
-            Object.keys(workoutHistoryLogs).forEach(key => {
-
-                const log = workoutHistoryLogs[key];
-
-                finalCombinedCalories += log.calories;
-
-                finalCombinedReps += log.reps;
-
-
-
-                let row = document.createElement('div');
-
-                row.className = "receipt-row";
-
-                row.innerHTML = `
-
-                    <span><strong>• ${langData.exercises[key] || key}:</strong></span>
-
-                    <span>${log.reps} U | ${log.calories.toFixed(1)} KCal | ${formatSecondsToMins(log.seconds)}</span>
-
-                `;
-
-                receiptBreakdown.appendChild(row);
-
-            });
-
-
-
-            receiptTotalRow.innerHTML = `
-
-                <span>🏆 ${langData.receipt_tot}:</span>
-
-                <span>${finalCombinedCalories.toFixed(1)} KCal | ${formatSecondsToMins(totalSessionSecondsAccumulated)}</span>
-
-            `;
+    receiptTotalRow.innerHTML = "<span>Sesión actual finalizada.</span>";
+    receiptGoalEstimationBox.style.display = "none";
+}
 
 
 
