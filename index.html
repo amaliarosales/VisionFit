@@ -1682,7 +1682,7 @@ initVoiceControl();
         }
         document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
 
-        // --- 2. CARGA DE AJUSTES Y CONFIGURACIÓN ---
+        // --- 2. CARGA DE AJUSTES (PESO, ESTATURA, META, ETC.) ---
         const savedSettings = localStorage.getItem('visionFitSettings');
         if (savedSettings) {
             const s = JSON.parse(savedSettings);
@@ -1694,10 +1694,10 @@ initVoiceControl();
             applyLanguage();
         }
 
-        // --- 3. CARGA DEL HISTORIAL ---
-        const savedHistory = localStorage.getItem('visionFitHistory');
-        if (savedHistory) {
-            window.workoutHistoryLogs = JSON.parse(savedHistory);
-        }
+        // --- 3. HISTORIAL ---
+        // Al NO cargar nada desde localStorage aquí, el historial empezará
+        // desde cero cada vez que refresques la página.
+        window.workoutHistoryLogs = {}; 
+        console.log("Historial inicializado desde cero.");
     });
 </script>
