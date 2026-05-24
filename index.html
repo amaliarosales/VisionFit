@@ -1095,34 +1095,45 @@
 
 
         function forceFullStop() {
+    function forceFullStop() {
     const langData = translations[languageSelector.value];
-    if(timerIntervalId) clearInterval(timerIntervalId);
+    if (timerIntervalId) clearInterval(timerIntervalId);
     
     saveCurrentExerciseToHistory();
     totalSessionSecondsAccumulated += activeExerciseSeconds;
 
-    // --- AQUÍ ESTÁ EL GUARDADO ---
-    localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
+    // --- LÓGICA DE HISTORIAL DE 5 SESIONES ---
+    let historial = JSON.parse(localStorage.getItem('visionFitHistory') || "[]");
     
-    const settings = {
+    const nuevaSesion = {
+        fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(),
+        logs: JSON.parse(JSON.stringify(workoutHistoryLogs)),
+        totalCals: txtCals.innerText,
+        totalTime: txtTime.innerText
+    };
+
+    historial.push(nuevaSesion);
+    // Mantenemos solo los últimos 5
+    if (historial.length > 5) historial.shift(); 
+    
+    localStorage.setItem('visionFitHistory', JSON.stringify(historial));
+    // -----------------------------------------
+
+    // Guardar ajustes personales
+    localStorage.setItem('visionFitSettings', JSON.stringify({
         exercise: exerciseSelector.value,
         loadWeight: inputLoad.value,
         bodyWeight: inputBodyWeight.value,
         height: inputHeight.value,
         goal: goalSelector.value
-    };
-    localStorage.setItem('visionFitSettings', JSON.stringify(settings));
-    // -----------------------------
+    }));
 
-    isWorkoutActive = false; 
-    isWorkoutPaused = false;
-    btnPause.disabled = true; 
+    isWorkoutActive = false;
+    btnPause.disabled = true;
     btnStop.disabled = true;
-    instructions.innerText = langData.stop;
-    txtSpeed.innerText = langData.stopped; 
-    txtGoalTime.innerText = langData.finished;
-
     cameraBox.style.display = "none";
+    
+    // Construimos el reporte con el historial completo
     buildFinalReceiptMarkup();
     receiptContainer.style.display = "block";
 }
