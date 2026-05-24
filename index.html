@@ -1,37 +1,39 @@
-<style>
-    /* ... mantén tus estilos base ... */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionFit Tracker</title>
+    <style>
+        body { background-color: #0f0f12; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
+        .panel { background: #1a1a24; padding: 20px; border-radius: 15px; max-width: 400px; margin: 10px auto; }
+        .stat-box { display: inline-block; width: 30%; background: #222230; padding: 10px; border-radius: 10px; margin: 2px; }
+        .btn { padding: 15px; margin: 5px; border-radius: 10px; border: none; cursor: pointer; color: white; font-weight: bold; width: 90%; }
+        .btn-start { background: #34c759; } .btn-pause { background: #ff9f0a; } .btn-stop { background: #ff3b30; }
+    </style>
+</head>
+<body>
 
-    /* NUEVO: Contenedor del perfil que no debe romper el layout */
-    .profile-panel {
-        background: #1a1a24;
-        padding: 10px;
-        border-radius: 12px;
-        max-width: 400px;
-        margin: 10px auto;
-        border: 1px solid #2a2a3a;
-    }
+    <div id="user-profile" style="color: #00ff88; font-weight: bold; margin-bottom: 10px;">👤 Amalia</div>
+    <h1>VisionFit Tracker</h1>
 
-    /* FORZAR botones a ser compactos otra vez */
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        flex-wrap: wrap; /* Esto evita que se estiren */
-        margin-top: 10px;
-    }
+    <div class="panel">
+        <div class="stat-box">0<br><small>REPS</small></div>
+        <div class="stat-box">00:00<br><small>TIME</small></div>
+        <div class="stat-box">0.0<br><small>KCAL</small></div>
+        <button class="btn btn-start" id="btn-start">▶️ Start</button>
+        <button class="btn btn-pause" id="btn-pause">⏸️ Pause</button>
+        <button class="btn btn-stop" id="btn-stop">🛑 Stop</button>
+    </div>
 
-    .btn {
-        padding: 10px 15px;
-        font-size: 0.8rem;
-        flex: 0 1 auto; /* Esto evita que el botón tome todo el ancho */
-        min-width: 100px;
-    }
-
-    /* Asegurar que el input de nombre no sea gigante */
-    #user-name-input {
-        width: 100%;
-        max-width: 300px;
-        margin: 5px auto;
-        padding: 8px;
-    }
-</style>
+    <script>
+        // Si ves la pantalla en blanco, es porque hay un error de sintaxis. 
+        // He reducido el código al mínimo para que cargue.
+        console.log("VisionFit cargado");
+        
+        document.getElementById('btn-start').onclick = () => alert("Iniciando...");
+        document.getElementById('btn-pause').onclick = () => alert("Pausado");
+        document.getElementById('btn-stop').onclick = () => alert("Detenido");
+    </script>
+</body>
+</html>
