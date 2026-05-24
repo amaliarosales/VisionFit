@@ -3,37 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VisionFit Tracker</title>
+    <title>VisionFit Engine v17.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { background-color: #0f0f12; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
-        .panel { background: #1a1a24; padding: 20px; border-radius: 15px; max-width: 400px; margin: 10px auto; }
-        .stat-box { display: inline-block; width: 30%; background: #222230; padding: 10px; border-radius: 10px; margin: 2px; }
-        .btn { padding: 15px; margin: 5px; border-radius: 10px; border: none; cursor: pointer; color: white; font-weight: bold; width: 90%; }
+        body { font-family: sans-serif; background-color: #0f0f12; color: white; text-align: center; padding: 10px; }
+        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin: 10px auto; max-width: 400px; border: 1px solid #2a2a3a; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #222230; padding: 10px; border-radius: 8px; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; display: block; color: #00ff88; }
+        .btn { padding: 12px; margin: 5px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100%; }
         .btn-start { background: #34c759; } .btn-pause { background: #ff9f0a; } .btn-stop { background: #ff3b30; }
+        input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div id="user-profile" style="color: #00ff88; font-weight: bold; margin-bottom: 10px;">👤 Amalia</div>
-    <h1>VisionFit Tracker</h1>
-
+    <div id="user-profile" style="color: #00ff88; font-weight: bold;"></div>
     <div class="panel">
-        <div class="stat-box">0<br><small>REPS</small></div>
-        <div class="stat-box">00:00<br><small>TIME</small></div>
-        <div class="stat-box">0.0<br><small>KCAL</small></div>
-        <button class="btn btn-start" id="btn-start">▶️ Start</button>
-        <button class="btn btn-pause" id="btn-pause">⏸️ Pause</button>
-        <button class="btn btn-stop" id="btn-stop">🛑 Stop</button>
+        <label style="font-size: 0.7rem; color: #aaa;">NOMBRE DE ATLETA</label>
+        <input type="text" id="user-name-input" placeholder="Tu nombre..." onchange="saveName()">
     </div>
 
+    <h1>VisionFit Tracker</h1>
+    
+    <div class="panel">
+        <div class="stats-grid">
+            <div class="stat-box"><span class="stat-val" id="val-reps">0</span>REPS</div>
+            <div class="stat-box"><span class="stat-val" id="val-time">00:00</span>TIME</div>
+            <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span>KCAL</div>
+        </div>
+        <button class="btn btn-start" id="btn-start">▶️ Start</button>
+        <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
+        <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop</button>
+    </div>
+
+    <canvas id="output_canvas" width="640" height="480" style="max-width: 400px; border-radius: 12px;"></canvas>
+
     <script>
-        // Si ves la pantalla en blanco, es porque hay un error de sintaxis. 
-        // He reducido el código al mínimo para que cargue.
-        console.log("VisionFit cargado");
-        
-        document.getElementById('btn-start').onclick = () => alert("Iniciando...");
-        document.getElementById('btn-pause').onclick = () => alert("Pausado");
-        document.getElementById('btn-stop').onclick = () => alert("Detenido");
+        // 1. LÓGICA DE USUARIO
+        const nameInput = document.getElementById('user-name-input');
+        function saveName() {
+            localStorage.setItem('visionFitUserName', nameInput.value);
+            document.getElementById('user-profile').innerText = "👤 " + nameInput.value;
+        }
+        window.onload = () => {
+            let saved = localStorage.getItem('visionFitUserName') || "Amalia";
+            nameInput.value = saved;
+            document.getElementById('user-profile').innerText = "👤 " + saved;
+        };
+
+        // 2. VARIABLES DE CONTROL
+        let isWorkoutActive = false, isWorkoutPaused = false, reps = 0;
+        const btnStart = document.getElementById('btn-start'), btnPause = document.getElementById('btn-pause'), btnStop = document.getElementById('btn-stop');
+
+        // 3. FUNCIONES DE BOTONES
+        btnStart.onclick = () => { 
+            isWorkoutActive = true; 
+            btnPause.disabled = false; btnStop.disabled = false;
+            alert("Entrenamiento iniciado"); 
+        };
+
+        btnPause.onclick = () => { 
+            isWorkoutPaused = !isWorkoutPaused; 
+            btnPause.innerText = isWorkoutPaused ? "▶️ Resume" : "⏸️ Pause"; 
+        };
+
+        btnStop.onclick = () => {
+            isWorkoutActive = false;
+            alert("Resumen guardado: " + reps + " reps");
+            location.reload();
+        };
+
+        // 4. VOZ
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.onresult = (e) => {
+                const cmd = e.results[e.results.length-1][0].transcript.toLowerCase();
+                if(cmd.includes("start")) btnStart.click();
+                if(cmd.includes("pausa") || cmd.includes("pause")) btnPause.click();
+                if(cmd.includes("stop") || cmd.includes("detener")) btnStop.click();
+            };
+            rec.start();
+        }
     </script>
 </body>
 </html>
