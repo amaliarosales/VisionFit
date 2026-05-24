@@ -1,73 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VisionFit Engine v17.1</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; }
-        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2a2a3a; }
-        .config-group { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 10px; }
-        input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .btn { padding: 12px; margin: 5px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: bold; width: 100%; }
-        .btn-start { background: #34c759; } .btn-pause { background: #ff9f0a; } .btn-stop { background: #ff3b30; }
-        #output_canvas { width: 100%; max-width: 400px; border-radius: 12px; }
-    </style>
-</head>
-<body>
+<style>
+    /* ... mantén tus estilos base ... */
 
-    <div id="user-profile" style="color: #00ff88; font-weight: bold; margin-bottom: 5px;"></div>
-    <div class="panel" style="max-width: 400px; margin: 10px auto;">
-        <div class="config-group">
-            <label>Nombre de Atleta</label>
-            <input type="text" id="user-name-input" placeholder="Escribe tu nombre..." onchange="saveName()">
-        </div>
-    </div>
+    /* NUEVO: Contenedor del perfil que no debe romper el layout */
+    .profile-panel {
+        background: #1a1a24;
+        padding: 10px;
+        border-radius: 12px;
+        max-width: 400px;
+        margin: 10px auto;
+        border: 1px solid #2a2a3a;
+    }
 
-    <h1>VisionFit Tracker v17.1</h1>
-    
-    <div class="panel">
-        <button class="btn btn-start" id="btn-start">▶️ Start Workout</button>
-        <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
-        <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop Full</button>
-    </div>
+    /* FORZAR botones a ser compactos otra vez */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap; /* Esto evita que se estiren */
+        margin-top: 10px;
+    }
 
-    <canvas id="output_canvas" width="640" height="480"></canvas>
+    .btn {
+        padding: 10px 15px;
+        font-size: 0.8rem;
+        flex: 0 1 auto; /* Esto evita que el botón tome todo el ancho */
+        min-width: 100px;
+    }
 
-    <script>
-        // --- LÓGICA DE NOMBRE ---
-        const nameInput = document.getElementById('user-name-input');
-        function saveName() {
-            localStorage.setItem('visionFitUserName', nameInput.value);
-            document.getElementById('user-profile').innerText = "👤 " + nameInput.value;
-        }
-
-        window.onload = () => {
-            const savedName = localStorage.getItem('visionFitUserName') || "Atleta";
-            nameInput.value = savedName;
-            document.getElementById('user-profile').innerText = "👤 " + savedName;
-        };
-
-        // --- LÓGICA DE HISTORIAL ---
-        let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory')) || {};
-        function saveHistory() {
-            localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
-        }
-
-        // --- LÓGICA DE VOZ Y CONTROL ---
-        // (Aquí pegas tu código de reconocimiento de voz y tu función forceFullStop modificada)
-        function forceFullStop() {
-            // ... tu lógica de parada ...
-            workoutHistoryLogs[new Date().toLocaleString()] = { reps: reps };
-            saveHistory();
-            // ... resto de tu lógica ...
-        }
-
-        // --- INICIALIZACIÓN ---
-        // (Aquí va tu código de MediaPipe original)
-    </script>
-</body>
-</html>
+    /* Asegurar que el input de nombre no sea gigante */
+    #user-name-input {
+        width: 100%;
+        max-width: 300px;
+        margin: 5px auto;
+        padding: 8px;
+    }
+</style>
