@@ -1669,84 +1669,26 @@ initVoiceControl();
 </html> 
 
 
-<div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88;"></div>
+<div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88; text-align: center;"></div>
 
 <script>
-   <div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88;"></div>
+    console.log("VisionFit: Cargando sistema de usuario...");
 
-<script>
-    // --- LÓGICA DE PERSISTENCIA UNIFICADA ---
-    
-    // 1. Cargar datos al inicio
     window.addEventListener('DOMContentLoaded', () => {
-        // Cargar Usuario
+        // Cargar nombre
         let userName = localStorage.getItem('visionFitUserName');
+        
+        // Si no existe, lo pedimos
         if (!userName) {
             userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
             localStorage.setItem('visionFitUserName', userName);
         }
-        document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
-
-        // Cargar Historial
-        let savedHistory = localStorage.getItem('visionFitHistory');
-        window.workoutHistoryLogs = savedHistory ? JSON.parse(savedHistory) : {};
-
-        // Cargar Ajustes (Settings)
-        const savedSettings = localStorage.getItem('visionFitSettings');
-        if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            if(settings.exercise) exerciseSelector.value = settings.exercise;
-            if(settings.loadWeight) inputLoad.value = settings.loadWeight;
-            if(settings.bodyWeight) inputBodyWeight.value = settings.bodyWeight;
-            if(settings.height) inputHeight.value = settings.height;
-            if(settings.goal) goalSelector.value = settings.goal;
-            // Actualizar variables internas
-            currentExerciseKey = exerciseSelector.value;
-            applyLanguage();
-        }
-    });
-
-    // 2. Funciones de guardado
-    function saveHistoryToLocalStorage() {
-        localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
-    }
-
-    function saveSettingsToLocalStorage() {
-        const settings = {
-            exercise: exerciseSelector.value,
-            loadWeight: inputLoad.value,
-            bodyWeight: inputBodyWeight.value,
-            height: inputHeight.value,
-            goal: goalSelector.value
-        };
-        localStorage.setItem('visionFitSettings', JSON.stringify(settings));
-    }
-
-    // 3. Listener para guardar cambios automáticamente
-    [exerciseSelector, inputLoad, inputBodyWeight, inputHeight, goalSelector].forEach(element => {
-        element.addEventListener('change', saveSettingsToLocalStorage);
-    });
-
-    // 4. Integración en forceFullStop
-    // Nota: Reemplaza tu función forceFullStop anterior por esta
-    function forceFullStop() {
-        const langData = translations[languageSelector.value];
-        if(timerIntervalId) clearInterval(timerIntervalId);
         
-        saveCurrentExerciseToHistory();
-        totalSessionSecondsAccumulated += activeExerciseSeconds;
-
-        saveHistoryToLocalStorage(); // Guardar historial
-        saveSettingsToLocalStorage(); // Guardar ajustes finales
-
-        isWorkoutActive = false; isWorkoutPaused = false;
-        btnPause.disabled = true; btnStop.disabled = true;
-        instructions.innerText = langData.stop + " (Saved)";
-        txtSpeed.innerText = langData.stopped; 
-        txtGoalTime.innerText = langData.finished;
-
-        cameraBox.style.display = "none";
-        buildFinalReceiptMarkup();
-        receiptContainer.style.display = "block";
-    }
+        // Mostrar nombre
+        const profileDiv = document.getElementById('user-profile');
+        if (profileDiv) {
+            profileDiv.innerText = "👤 Atleta: " + userName;
+        }
+        console.log("VisionFit: Usuario cargado -> " + userName);
+    });
 </script>
