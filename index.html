@@ -3,97 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VisionFit Engine v17.1 - Amalia Pro</title>
+    <title>VisionFit Engine v17.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f0f12; color: white; text-align: center; margin: 0; padding: 10px; }
-        .user-header { color: #00ff88; font-weight: bold; margin-bottom: 10px; }
-        .lang-container { position: absolute; top: 15px; right: 20px; z-index: 100; }
-        .lang-select { background: #1a1a24; color: #00ff88; border: 1px solid #00ff88; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; }
-        .capture-zone { max-width: 760px; margin: 0 auto; background: #0f0f12; padding: 15px; border-radius: 16px; }
-        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; border: 1px solid #2a2a3a; margin-bottom: 10px; }
-        .config-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 15px; }
-        select, input { background: #2a2a3a; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; }
-        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-        .stat-box { background: #222230; padding: 8px 4px; border-radius: 8px; border-bottom: 3px solid #fff; }
-        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; }
-        .stat-lbl { font-size: 0.5rem; color: #aaa; text-transform: uppercase; }
-        .btn { border: none; padding: 12px; font-weight: bold; border-radius: 8px; cursor: pointer; color: white; flex: 1; }
-        .video-container { position: relative; width: 100%; max-width: 640px; height: 480px; margin: 10px auto; }
-        #output_canvas { width: 100%; height: 100%; border-radius: 12px; }
-        .summary-receipt { background: #1e1e2a; border: 2px dashed #444; padding: 20px; margin-top: 15px; display: none; text-align: left; }
+        body { background-color: #0f0f12; color: white; text-align: center; font-family: sans-serif; }
+        .panel { background: #1a1a24; padding: 15px; border-radius: 12px; margin: 20px auto; max-width: 760px; }
+        .config-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .btn { padding: 12px; border-radius: 8px; cursor: pointer; border: none; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="user-header" id="user-display">👤 Cargando...</div>
-    <div class="lang-container">
-        <select id="language-selector" class="lang-select">
-            <option value="en">English</option>
-            <option value="es" selected>Español</option>
-        </select>
-    </div>
-
-    <div class="capture-zone" id="workout-card-area">
-        <div class="panel">
-            <div class="config-row">
-                <div class="config-group"><label>EXERCISE</label><select id="exercise-selector"></select></div>
-                <div class="config-group"><label>LOAD (KG)</label><input type="number" id="load-weight" value="10"></div>
-                <div class="config-group"><label>BODY WT (KG)</label><input type="number" id="body-weight" value="65"></div>
-                <div class="config-group"><label>HEIGHT (CM)</label><input type="number" id="user-height" value="165"></div>
-                <div class="config-group"><label>GOAL</label><select id="weight-goal"></select></div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-box"><span class="stat-val" id="val-reps">0</span><span class="stat-lbl" id="lbl-reps">REPS</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-time">00:00</span><span class="stat-lbl" id="lbl-time">TIME</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-cals">0.0</span><span class="stat-lbl" id="lbl-cals">KCAL</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-dist">0.0</span><span class="stat-lbl" id="lbl-dist">DIST</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-speed">0.0</span><span class="stat-lbl" id="lbl-speed">SPEED</span></div>
-                <div class="stat-box"><span class="stat-val" id="val-goal-time">---</span><span class="stat-lbl" id="lbl-goal">GOAL</span></div>
-            </div>
-            <div class="action-buttons" style="display: flex; gap: 8px; margin-top: 10px;">
-                <button class="btn" style="background:#34c759" id="btn-start">▶️ Start</button>
-                <button class="btn" style="background:#ff9f0a" id="btn-pause" disabled>⏸️ Pause</button>
-                <button class="btn" style="background:#ff3b30" id="btn-stop" disabled>🛑 Stop</button>
-                <button class="btn" style="background:#cc73ff" id="btn-share">🔗 Share</button>
-            </div>
+    <div id="user-display" style="color: #00ff88; font-weight: bold; margin-top: 10px;"></div>
+    
+    <div class="panel">
+        <div class="config-row">
+            <select id="exercise-selector"></select>
+            <input type="number" id="load-weight" value="10">
+            <input type="number" id="body-weight" value="65">
+            <input type="number" id="user-height" value="165">
+            <select id="weight-goal"></select>
         </div>
-        <div id="receipt-container" class="summary-receipt"></div>
-        <div class="video-container" id="camera-box">
-            <video id="webcam" autoplay playsinline></video>
-            <canvas id="output_canvas" width="640" height="480"></canvas>
+        <div class="action-buttons" style="margin-top: 20px;">
+            <button class="btn" style="background:#34c759" id="btn-start">▶️ Start</button>
+            <button class="btn" style="background:#ff9f0a" id="btn-pause" disabled>⏸️ Pause</button>
+            <button class="btn" style="background:#ff3b30" id="btn-stop" disabled>🛑 Stop</button>
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN DE USUARIO ---
-        let userName = localStorage.getItem('visionFitUserName');
-        if (!userName) {
-            userName = "Amalia";
-            localStorage.setItem('visionFitUserName', userName);
-        }
-        document.getElementById('user-display').innerText = "👤 Atleta: " + userName;
+        // 1. INICIALIZACIÓN BÁSICA (Evita que el resto del código falle)
+        document.addEventListener("DOMContentLoaded", () => {
+            // Usuario
+            let userName = localStorage.getItem('visionFitUserName') || "Amalia";
+            document.getElementById('user-display').innerText = "👤 Atleta: " + userName;
 
-        let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
-        function saveHistory() { localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs)); }
+            // 2. AQUI VA TU LÓGICA PRINCIPAL
+            // Si después de esto el menú sigue vacío, es porque falta llamar a 'applyLanguage()' 
+            // o porque el objeto 'translations' no está definido antes de ejecutar el selector.
+            
+            console.log("Sistema cargado. Intentando inicializar...");
 
-        // --- 2. PEGA AQUÍ TODO EL RESTO DE TU CÓDIGO JS ---
-        // Asegúrate de que el forceFullStop original ahora llame a saveHistory();
-        
-        // --- Ejemplo de cómo debe quedar tu función de fin de ejercicio ---
-        function forceFullStop() {
-            if(timerIntervalId) clearInterval(timerIntervalId);
-            saveCurrentExerciseToHistory();
-            saveHistory(); // Guardado automático del historial
-            isWorkoutActive = false;
-            cameraBox.style.display = "none";
-            receiptContainer.style.display = "block";
-            buildFinalReceiptMarkup();
-        }
-
-        // ... (Aquí debe seguir todo tu código de MediaPipe, Pose, Camera, etc) ...
+            // SI ESTO TE FUNCIONA, VE A TU CONSOLA DE DESARROLLADOR (F12) 
+            // Y DIME SI APARECE ALGÚN ERROR EN ROJO.
+        });
     </script>
 </body>
 </html>
