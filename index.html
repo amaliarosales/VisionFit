@@ -528,7 +528,7 @@ function saveCurrentExerciseToHistory() {
             const langData = translations[languageSelector.value];
             reps = 0; totalCalories = 0.0; speedTimeHistory = []; lastPositions = {}; workoutStartTime = Date.now();
             activeExerciseSeconds = 0; totalSessionSecondsAccumulated = 0;
-            workoutHistoryLogs = {}; currentExerciseKey = exerciseSelector.value;
+             = {}; currentExerciseKey = exerciseSelector.value;
 
             txtReps.innerText = "0"; txtTime.innerText = "00:00"; txtCals.innerText = "0.0"; 
             if (currentExerciseKey === 'dance') {
