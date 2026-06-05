@@ -459,12 +459,29 @@ let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || 
 
         function saveCurrentExerciseToHistory() {
             if (reps > 0 || totalCalories > 0.01) {
-                if (!workoutHistoryLogs[currentExerciseKey]) {
-                    workoutHistoryLogs[currentExerciseKey] = { reps: 0, calories: 0, seconds: 0 };
-                }
-                workoutHistoryLogs[currentExerciseKey].reps += reps;
-                workoutHistoryLogs[currentExerciseKey].calories += parseFloat(txtCals.innerText) - Object.keys(workoutHistoryLogs).reduce((acc, k) => acc + (k !== currentExerciseKey ? workoutHistoryLogs[k].calories : 0), 0);
-                workoutHistoryLogs[currentExerciseKey].seconds += activeExerciseSeconds;
+function saveCurrentExerciseToHistory() {
+    // 1. Cargar el historial actual desde localStorage (para asegurar persistencia)
+    let savedData = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
+    
+    // 2. Si el ejercicio no existe en el historial, crearlo
+    if (!savedData[currentExerciseKey]) {
+        savedData[currentExerciseKey] = { reps: 0, calories: 0, seconds: 0 };
+    }
+    
+    // 3. Sumar valores actuales
+    // Nota: Usamos parseFloat en txtCals.innerText para evitar errores si no es número
+    const currentCals = parseFloat(txtCals.innerText) || 0;
+    
+    savedData[currentExerciseKey].reps += reps;
+    savedData[currentExerciseKey].calories += currentCals; 
+    savedData[currentExerciseKey].seconds += activeExerciseSeconds;
+    
+    // 4. Actualizar variable global y guardar en localStorage
+    workoutHistoryLogs = savedData;
+    localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
+    
+    console.log("Historial guardado:", workoutHistoryLogs);
+}
             }
         }
 
