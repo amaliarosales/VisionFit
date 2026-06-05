@@ -339,8 +339,7 @@
 
         let isWorkoutActive = false; let isWorkoutPaused = false; 
         let activeExerciseSeconds = 0; let timerIntervalId = null; let currentExerciseKey = "dance";
-        let workoutHistoryLogs = {}; 
-
+let workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
         // Variable global para acumular el tiempo total neto de la sesión (en segundos)
         let totalSessionSecondsAccumulated = 0;
 
