@@ -42,794 +42,90 @@
 
 
 
-    <style>
-
-
-
+   <style>
         body {
-
-
-
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-
-
-            background-color: #0f0f12;
-
-
-
-            color: white;
-
-
-
+            background: radial-gradient(circle at center, #1a2a2a 0%, #050b0b 100%);
+            color: #e0ffff;
             text-align: center;
-
-
-
             margin: 0;
-
-
-
             padding: 10px;
-
-
-
             position: relative;
-
-
-
+            min-height: 100vh;
         }
-
-
-
         
-
-
-
-        .lang-container {
-
-
-
-            position: absolute;
-
-
-
-            top: 15px;
-
-
-
-            right: 20px;
-
-
-
-            z-index: 100;
-
-
-
-        }
-
-
-
+        .lang-container { position: absolute; top: 15px; right: 20px; z-index: 100; }
+        
         .lang-select {
-
-
-
-            background: #1a1a24;
-
-
-
-            color: #00ff88;
-
-
-
-            border: 1px solid #00ff88;
-
-
-
+            background: linear-gradient(145deg, #0d1f1f, #1a3b3b);
+            color: #7fffd4;
+            border: 1px solid #7fffd4;
             padding: 6px 12px;
-
-
-
             border-radius: 20px;
-
-
-
-            font-size: 0.8rem;
-
-
-
             font-weight: bold;
-
-
-
-            outline: none;
-
-
-
+            box-shadow: 0 0 10px rgba(127, 255, 212, 0.3);
             cursor: pointer;
-
-
-
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
-
-
-
-            transition: all 0.2s;
-
-
-
         }
 
-
-
-        .lang-select:hover {
-
-
-
-            background: #00ff88;
-
-
-
-            color: #0f0f12;
-
-
-
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
-
-
-
-        }
-
-
-
-
-
-
-
-        h1 { margin-top: 10px; margin-bottom: 5px; color: #fff; font-size: 1.4rem;}
-
-
-
-        .status { color: #888; font-size: 0.9rem; margin-top: 0; }
-
-
-
+        h1 { margin-top: 10px; color: #7fffd4; text-shadow: 0 0 10px rgba(127, 255, 212, 0.5); }
         
-
-
-
-        .capture-zone {
-
-
-
-            max-width: 760px;
-
-
-
-            margin: 0 auto;
-
-
-
-            background: #0f0f12;
-
-
-
-            padding: 15px;
-
-
-
-            border-radius: 16px;
-
-
-
-        }
-
-
-
-
-
-
+        .capture-zone { max-width: 760px; margin: 0 auto; background: rgba(10, 20, 20, 0.8); padding: 15px; border-radius: 16px; border: 1px solid #2a4d4d; }
 
         .panel {
-
-
-
-            background: #1a1a24;
-
-
-
+            background: linear-gradient(180deg, #162a2a 0%, #0d1a1a 100%);
             padding: 15px;
-
-
-
             border-radius: 12px;
-
-
-
-            border: 1px solid #2a2a3a;
-
-
-
-            margin-bottom: 10px;
-
-
-
+            border: 1px solid #336666;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
         }
-
-
-
         
-
-
-
-        .config-row {
-
-
-
-            display: grid;
-
-
-
-            grid-template-columns: repeat(5, 1fr);
-
-
-
-            gap: 12px;
-
-
-
-            margin-bottom: 15px;
-
-
-
-        }
-
-
-
-        @media (max-width: 720px) {
-
-
-
-            .config-row { grid-template-columns: repeat(2, 1fr); }
-
-
-
-        }
-
-
-
-        @media (max-width: 480px) {
-
-
-
-            .config-row { grid-template-columns: 1fr; }
-
-
-
-        }
-
-
-
-        
-
-
-
-        .config-group {
-
-
-
-            display: flex;
-
-
-
-            flex-direction: column;
-
-
-
-            align-items: flex-start;
-
-
-
-            width: 100%;
-
-
-
-        }
-
-
-
-        .config-group label {
-
-
-
-            font-size: 0.65rem;
-
-
-
-            color: #aaa;
-
-
-
-            margin-bottom: 6px;
-
-
-
-            text-transform: uppercase;
-
-
-
-            font-weight: bold;
-
-
-
-            width: 100%;
-
-
-
-            text-align: left;
-
-
-
-            white-space: nowrap;
-
-
-
-            overflow: hidden;
-
-
-
-            text-overflow: ellipsis;
-
-
-
-        }
-
-
-
-        
-
-
-
         select, input {
-
-
-
-            background: #2a2a3a;
-
-
-
-            color: white;
-
-
-
-            border: 1px solid #444;
-
-
-
-            padding: 10px 12px;
-
-
-
+            background: #0d1a1a;
+            color: #7fffd4;
+            border: 1px solid #4a8c8c;
+            padding: 10px;
             border-radius: 6px;
-
-
-
-            font-size: 0.85rem;
-
-
-
-            outline: none;
-
-
-
-            width: 100%;
-
-
-
-            box-sizing: border-box;
-
-
-
-            line-height: 1.2;
-
-
-
         }
-
-
-
-        
-
-
-
-        .stats-grid {
-
-
-
-            display: grid;
-
-
-
-            grid-template-columns: repeat(6, 1fr);
-
-
-
-            gap: 6px;
-
-
-
-            margin-top: 5px;
-
-
-
-        }
-
-
-
-        @media (max-width: 768px) {
-
-
-
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-
-
-
-        }
-
-
-
-        @media (max-width: 480px) {
-
-
-
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-
-
-
-        }
-
-
 
         .stat-box {
-
-
-
-            background: #222230;
-
-
-
+            background: #112222;
             padding: 8px 4px;
-
-
-
             border-radius: 8px;
-
-
-
-            border-bottom: 3px solid #fff;
-
-
-
+            border-bottom: 3px solid #7fffd4;
         }
-
-
-
-        .box-reps { border-color: #00ff88; color: #00ff88; }
-
-
-
-        .box-time { border-color: #ffff00; color: #ffff00; }
-
-
-
-        .box-cals { border-color: #ff9f0a; color: #ff9f0a; }
-
-
-
-        .box-dist { border-color: #00bfff; color: #00bfff; }
-
-
-
-        .box-speed { border-color: #cc73ff; color: #cc73ff; }
-
-
-
-        .box-goal { border-color: #ff3b30; color: #ff5e55; }
-
-
-
         
-
-
-
-        .stat-val { font-size: 1.1rem; font-weight: bold; display: block; padding: 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-
-
-        .stat-lbl { font-size: 0.58rem; color: #aaa; text-transform: uppercase; }
-
-
-
-
-
-
-
-        .action-buttons {
-
-
-
-            display: flex;
-
-
-
-            gap: 8px;
-
-
-
-            margin-top: 10px;
-
-
-
-            flex-wrap: wrap;
-
-
-
-        }
-
-
-
+        /* Botones Metálicos */
         .btn {
-
-
-
-            color: white;
-
-
-
+            color: #050b0b;
             border: none;
-
-
-
             padding: 12px 15px;
-
-
-
-            font-size: 0.85rem;
-
-
-
             font-weight: bold;
-
-
-
             border-radius: 8px;
-
-
-
             cursor: pointer;
-
-
-
-            flex: 1;
-
-
-
-            min-width: 110px;
-
-
-
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-
-
-
-            transition: background 0.2s, transform 0.1s;
-
-
-
+            background: linear-gradient(145deg, #7fffd4, #40d0a0);
+            transition: transform 0.2s, filter 0.2s;
         }
-
-
-
-        .btn-start { background: #34c759; }
-
-
-
-        .btn-start:hover { background: #28a745; }
-
-
-
-        .btn-pause { background: #ff9f0a; }
-
-
-
-        .btn-pause:hover { background: #e08b00; }
-
-
-
-        .btn-stop { background: #ff3b30; }
-
-
-
-        .btn-stop:hover { background: #d9261c; }
-
-
-
-        .btn-share { background: #cc73ff; color: #0f0f12; }
-
-
-
-        .btn-share:hover { background: #b856ff; color: white;}
-
-
-
-        
-
-
-
-        .video-container {
-
-
-
-            position: relative;
-
-
-
-            width: 100%;
-
-
-
-            max-width: 640px;
-
-
-
-            height: 480px;
-
-
-
-            margin: 10px auto 0 auto;
-
-
-
-        }
-
-
-
-        #webcam { display: none; }
-
-
+        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .btn-stop { background: linear-gradient(145deg, #ff7f7f, #d44040); color: white; }
+        .btn-pause { background: linear-gradient(145deg, #ffd700, #b8860b); }
 
         #output_canvas {
-
-
-
             border-radius: 12px;
-
-
-
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-
-
-
-            background-color: #151518;
-
-
-
+            border: 2px solid #7fffd4;
+            box-shadow: 0 0 20px rgba(127, 255, 212, 0.2);
+            background-color: #000;
             width: 100%;
-
-
-
-            height: 100%;
-
-
-
         }
-
-
-
-
-
-
-
-        /* Ticket de Reporte Estilizado */
-
-
 
         .summary-receipt {
-
-
-
-            background: #1e1e2a;
-
-
-
-            border: 2px dashed #444;
-
-
-
+            background: #0d1a1a;
+            border: 2px solid #7fffd4;
             border-radius: 12px;
-
-
-
             padding: 20px;
-
-
-
-            margin-top: 15px;
-
-
-
-            text-align: left;
-
-
-
-            display: none;
-
-
-
+            color: #e0ffff;
         }
-
-
-
-        .summary-receipt h3 { margin-top: 0; color: #00ff88; border-bottom: 1px solid #333; padding-bottom: 8px; text-transform: uppercase; font-size: 1.1rem; }
-
-
-
-        .receipt-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.9rem; color: #ddd; }
-
-
-
-        .receipt-total { display: flex; justify-content: space-between; margin-top: 15px; border-top: 2px solid #555; padding-top: 10px; font-weight: bold; color: #00bfff; font-size: 1.05rem; }
-
-
-
-        
-
-
-
-        /* Caja resaltada para la meta de peso restante */
-
-
-
-        .receipt-goal-estimation {
-
-
-
-            background: rgba(255, 59, 48, 0.15);
-
-
-
-            border-left: 4px solid #ff3b30;
-
-
-
-            padding: 10px 12px;
-
-
-
-            margin-top: 12px;
-
-
-
-            border-radius: 4px;
-
-
-
-            font-size: 0.88rem;
-
-
-
-            color: #ff817b;
-
-
-
-            font-weight: 500;
-
-
-
-        }
-
-
-
+        .summary-receipt h3 { color: #7fffd4; }
+        .receipt-total { border-top: 1px solid #7fffd4; color: #7fffd4; }
     </style>
 
 
