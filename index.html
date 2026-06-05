@@ -1,2611 +1,1172 @@
-<!DOCTYPE html>
+'use client';
 
 
 
-<html lang="en">
+import { useState, useEffect, useRef } from 'react';
 
+import { supabase } from './supabase';
 
 
-<head>
 
+interface TareaHistorial {
 
+  id: string;
 
-    <meta charset="UTF-8">
+  texto: string;
 
+  duracionSegundos: number;
 
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-
-    <title>VisionFit Engine v17.1 - Summary Goal Pro</title>
-
-
-
-    
-
-
-
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-
-
-
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-
-
-
-
-
-
-   <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #1a2a2a 0%, #050b0b 100%);
-            color: #e0ffff;
-            text-align: center;
-            margin: 0;
-            padding: 10px;
-            position: relative;
-            min-height: 100vh;
-        }
-        
-        .lang-container { position: absolute; top: 15px; right: 20px; z-index: 100; }
-        
-        .lang-select {
-            background: linear-gradient(145deg, #0d1f1f, #1a3b3b);
-            color: #7fffd4;
-            border: 1px solid #7fffd4;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            box-shadow: 0 0 10px rgba(127, 255, 212, 0.3);
-            cursor: pointer;
-        }
-
-        h1 { margin-top: 10px; color: #7fffd4; text-shadow: 0 0 10px rgba(127, 255, 212, 0.5); }
-        
-        .capture-zone { max-width: 760px; margin: 0 auto; background: rgba(10, 20, 20, 0.8); padding: 15px; border-radius: 16px; border: 1px solid #2a4d4d; }
-
-        .panel {
-            background: linear-gradient(180deg, #162a2a 0%, #0d1a1a 100%);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #336666;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-        }
-        
-        select, input {
-            background: #0d1a1a;
-            color: #7fffd4;
-            border: 1px solid #4a8c8c;
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        .stat-box {
-            background: #112222;
-            padding: 8px 4px;
-            border-radius: 8px;
-            border-bottom: 3px solid #7fffd4;
-        }
-        
-        /* Botones Metálicos */
-        .btn {
-            color: #050b0b;
-            border: none;
-            padding: 12px 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            background: linear-gradient(145deg, #7fffd4, #40d0a0);
-            transition: transform 0.2s, filter 0.2s;
-        }
-        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        .btn-stop { background: linear-gradient(145deg, #ff7f7f, #d44040); color: white; }
-        .btn-pause { background: linear-gradient(145deg, #ffd700, #b8860b); }
-
-        #output_canvas {
-            border-radius: 12px;
-            border: 2px solid #7fffd4;
-            box-shadow: 0 0 20px rgba(127, 255, 212, 0.2);
-            background-color: #000;
-            width: 100%;
-        }
-
-        .summary-receipt {
-            background: #0d1a1a;
-            border: 2px solid #7fffd4;
-            border-radius: 12px;
-            padding: 20px;
-            color: #e0ffff;
-        }
-        .summary-receipt h3 { color: #7fffd4; }
-        .receipt-total { border-top: 1px solid #7fffd4; color: #7fffd4; }
-    </style>
-
-
-
-</head>
-
-
-
-<body>
-
-
-
-
-
-
-
-    <div class="lang-container">
-
-
-
-        <select id="language-selector" class="lang-select">
-
-
-
-            <option value="en" selected>🌐 English</option>
-
-
-
-            <option value="es">🌐 Español</option>
-
-
-
-        </select>
-
-
-
-    </div>
-
-
-
-
-
-
-
-    <h1 id="main-title">VisionFit Tracker v17.1 ⚡ Global Summary</h1>
-
-
-
-    <p class="status" id="instructions">System Online. Press Start Workout to begin tracking.</p>
-
-
-
-    
-
-
-
-    <div class="capture-zone" id="workout-card-area">
-
-
-
-        <div class="panel">
-
-
-
-            <div class="config-row">
-
-
-
-                <div class="config-group">
-
-
-
-                    <label id="lbl-select-exercise">EXERCISE</label>
-
-
-
-                    <select id="exercise-selector">
-
-
-
-                        </select>
-
-
-
-                </div>
-
-
-
-                <div class="config-group">
-
-
-
-                    <label id="lbl-select-load">LOAD WEIGHT (KG)</label>
-
-
-
-                    <input type="number" id="load-weight" value="10" min="0" max="200">
-
-
-
-                </div>
-
-
-
-                <div class="config-group">
-
-
-
-                    <label id="lbl-select-userweight">YOUR WEIGHT (KG)</label>
-
-
-
-                    <input type="number" id="body-weight" value="65" min="30" max="250">
-
-
-
-                </div>
-
-
-
-                <div class="config-group">
-
-
-
-                    <label id="lbl-select-height">HEIGHT (CM)</label>
-
-
-
-                    <input type="number" id="user-height" value="165" min="100" max="230">
-
-
-
-                </div>
-
-
-
-                <div class="config-group">
-
-
-
-                    <label id="lbl-select-goal">WEIGHT GOAL</label>
-
-
-
-                    <select id="weight-goal">
-
-
-
-                        </select>
-
-
-
-                </div>
-
-
-
-            </div>
-
-
-
-
-
-
-
-            <div class="stats-grid">
-
-
-
-                <div class="stat-box box-reps">
-
-
-
-                    <span class="stat-val" id="val-reps">0</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-reps">Dance Moves</span>
-
-
-
-                </div>
-
-
-
-                <div class="stat-box box-time">
-
-
-
-                    <span class="stat-val" id="val-time">00:00</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-time">Time</span>
-
-
-
-                </div>
-
-
-
-                <div class="stat-box box-cals">
-
-
-
-                    <span class="stat-val" id="val-cals">0.0</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-cals">Burned KCal</span>
-
-
-
-                </div>
-
-
-
-                <div class="stat-box box-dist">
-
-
-
-                    <span class="stat-val" id="val-dist">Active</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-dist">Intensity</span>
-
-
-
-                </div>
-
-
-
-                <div class="stat-box box-speed">
-
-
-
-                    <span class="stat-val" id="val-speed">Tracking</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-speed">Rhythm Status</span>
-
-
-
-                </div>
-
-
-
-                <div class="stat-box box-goal">
-
-
-
-                    <span class="stat-val" id="val-goal-time">Workout Stopped</span>
-
-
-
-                    <span class="stat-lbl" id="lbl-goal">Time to Goal</span>
-
-
-
-                </div>
-
-
-
-            </div>
-
-
-
-            
-
-
-
-            <div class="action-buttons">
-
-
-
-                <button class="btn btn-start" id="btn-start">▶️ Start Workout</button>
-
-
-
-                <button class="btn btn-pause" id="btn-pause" disabled>⏸️ Pause</button>
-
-
-
-                <button class="btn btn-stop" id="btn-stop" disabled>🛑 Stop Full</button>
-
-
-
-                <button class="btn btn-share" id="btn-share">🔗 Share Workout Card</button>
-
-
-
-            </div>
-
-
-
-        </div>
-
-
-
-
-
-
-
-        <div id="receipt-container" class="summary-receipt">
-
-
-
-            <h3 id="receipt-title">Workout Summary Report</h3>
-
-
-
-            <div id="receipt-breakdown"></div>
-
-
-
-            <div id="receipt-total-row" class="receipt-total"></div>
-
-
-
-            <div id="receipt-goal-estimation-box" class="receipt-goal-estimation"></div>
-
-
-
-        </div>
-
-
-
-
-
-
-
-        <div class="video-container" id="camera-box">
-
-
-
-            <video id="webcam" autoplay playsinline></video>
-
-
-
-            <canvas id="output_canvas" width="640" height="480"></canvas>
-
-
-
-        </div>
-
-
-
-    </div>
-
-
-
-
-
-
-
-    <script>
-
-
-
-        const videoElement = document.getElementById('webcam');
-
-
-
-        const canvasElement = document.getElementById('output_canvas');
-
-
-
-        const canvasCtx = canvasElement.getContext('2d');
-
-
-
-        
-
-
-
-        const languageSelector = document.getElementById('language-selector');
-
-
-
-        const exerciseSelector = document.getElementById('exercise-selector');
-
-
-
-        const inputLoad = document.getElementById('load-weight');
-
-
-
-        const inputBodyWeight = document.getElementById('body-weight');
-
-
-
-        const inputHeight = document.getElementById('user-height');
-
-
-
-        const goalSelector = document.getElementById('weight-goal');
-
-
-
-        
-
-
-
-        const txtReps = document.getElementById('val-reps');
-
-
-
-        const txtTime = document.getElementById('val-time');
-
-
-
-        const txtCals = document.getElementById('val-cals');
-
-
-
-        const txtDist = document.getElementById('val-dist');
-
-
-
-        const txtSpeed = document.getElementById('val-speed');
-
-
-
-        const txtGoalTime = document.getElementById('val-goal-time');
-
-
-
-        
-
-
-
-        const lblReps = document.getElementById('lbl-reps');
-
-
-
-        const lblTime = document.getElementById('lbl-time');
-
-
-
-        const lblCals = document.getElementById('lbl-cals');
-
-
-
-        const lblDist = document.getElementById('lbl-dist');
-
-
-
-        const lblSpeed = document.getElementById('lbl-speed');
-
-
-
-        const lblGoal = document.getElementById('lbl-goal');
-
-
-
-        
-
-
-
-        const btnStart = document.getElementById('btn-start');
-
-
-
-        const btnPause = document.getElementById('btn-pause');
-
-
-
-        const btnStop = document.getElementById('btn-stop');
-
-
-
-        const btnShare = document.getElementById('btn-share');
-
-
-
-        const instructions = document.getElementById('instructions');
-
-
-
-        
-
-
-
-        const receiptContainer = document.getElementById('receipt-container');
-
-
-
-        const receiptBreakdown = document.getElementById('receipt-breakdown');
-
-
-
-        const receiptTotalRow = document.getElementById('receipt-total-row');
-
-
-
-        const receiptGoalEstimationBox = document.getElementById('receipt-goal-estimation-box');
-
-
-
-        const cameraBox = document.getElementById('camera-box');
-
-
-
-
-
-
-
-        let reps = 0; let totalCalories = 0.0; let speedTimeHistory = []; let workoutStartTime = Date.now();
-
-
-
-        let downMovement = false; let inwardMovement = false; let bikeOscillation = false; let legExtended = false; let stepExtended = false; 
-
-
-
-        let lastPositions = {}; let danceMoveThreshold = false;
-
-
-
-
-
-
-
-        let isWorkoutActive = false; let isWorkoutPaused = false; 
-
-
-
-        let activeExerciseSeconds = 0; let timerIntervalId = null; let currentExerciseKey = "dance";
-
-
-
-        let workoutHistoryLogs = {}; 
-
-
-
-
-
-
-
-        // Variable global para acumular el tiempo total neto de la sesión (en segundos)
-
-
-
-        let totalSessionSecondsAccumulated = 0;
-
-
-
-
-
-
-
-        // --- 🌐 LOCALIZATION DICTIONARY 🌐 ---
-
-
-
-        const translations = {
-
-
-
-            en: {
-
-
-
-                title: "VisionFit Tracker v17.1 ⚡ Global Summary",
-
-
-
-                init_msg: "System Online. Press Start Workout to begin tracking.",
-
-
-
-                start: "Workout Active! IA counters running.",
-
-
-
-                pause: "Workout Paused. Counters frozen.",
-
-
-
-                resume: "Workout Resumed! Tracking active.",
-
-
-
-                stop: "Workout Finished. Summary report created.",
-
-
-
-                measuring: "Measuring...", paused: "Paused", stopped: "Stopped", finished: "Finished", tracking: "Tracking", active: "Active",
-
-
-
-                lbl_ex: "EXERCISE", lbl_load: "LOAD WEIGHT (KG)", lbl_user: "YOUR WEIGHT (KG)", lbl_height: "HEIGHT (CM)", lbl_goal_opt: "WEIGHT GOAL",
-
-
-
-                btn_start: "▶️ Start Workout", btn_pause: "⏸️ Pause", btn_resume: "▶️ Resume", btn_stop: "🛑 Stop Full", btn_share: "🔗 Share Workout Card",
-
-
-
-                lbl_cals: "Burned KCal", lbl_goal: "Time to Goal", lbl_time: "Duration",
-
-
-
-                receipt_hd: "Workout Summary Report", receipt_tot: "TOTAL COMBINED SESSION",
-
-
-
-                metrics: {
-
-
-
-                    strength: { reps: "Repetitions", dist: "Load Applied", speed: "Tempo Pace" },
-
-
-
-                    cardio: { reps: "Steps Count", dist: "Distance", speed: "Speed" },
-
-
-
-                    dance: { reps: "Dance Moves", dist: "Intensity", speed: "Rhythm Status" }
-
-
-
-                },
-
-
-
-                exercises: {
-
-
-
-                    dance: "Dance / Full Body Rhythm", pec_fly: "Pec Deck Fly", squats: "Squats", pushups: "Push-ups",
-
-
-
-                    lat_pulldown: "Lat Pulldown", leg_extension: "Leg Extension", treadmill: "Treadmill / Walking", air_bike: "Air Bike"
-
-
-
-                },
-
-
-
-                goals: [
-
-
-
-                    { value: "0.5", label: "Lose 0.5 kg (~1.1 lbs)" }, { value: "1.0", label: "Lose 1.0 kg (~2.2 lbs)" },
-
-
-
-                    { value: "2.0", label: "Lose 2.0 kg (~4.4 lbs)" }, { value: "5.0", label: "Lose 5.0 kg (~11.0 lbs)" }
-
-
-
-                ],
-
-
-
-                share_title: "My VisionFit Workout", share_text: "Check out my progress!", share_success: "Shared successfully!", share_fallback: "Local Environment: Card saved to downloads gallery!"
-
-
-
-            },
-
-
-
-            es: {
-
-
-
-                title: "VisionFit Tracker v17.1 ⚡ Motor Global Pro",
-
-
-
-                init_msg: "Sistema En Línea. Presiona Iniciar Entrenamiento para contar.",
-
-
-
-                start: "¡Entrenamiento Activo! Contadores de IA ejecutándose.",
-
-
-
-                pause: "Entrenamiento Pausado. Captura congelada.",
-
-
-
-                resume: "¡Entrenamiento Reanudado! Captura activa.",
-
-
-
-                stop: "Entrenamiento Finalizado. Reporte de resumen creado.",
-
-
-
-                measuring: "Calculando...", paused: "Pausado", stopped: "Detenido", finished: "Terminado", tracking: "Rastreando", active: "Activo",
-
-
-
-                lbl_ex: "EJERCICIO", lbl_load: "PESO DE CARGA (KG)", lbl_user: "TU PESO (KG)", lbl_height: "ESTATURA (CM)", lbl_goal_opt: "META BAJAR",
-
-
-
-                btn_start: "▶️ Iniciar Récord", btn_pause: "⏸️ Pausar", btn_resume: "▶️ Continuar", btn_stop: "🛑 Detener Todo", btn_share: "🔗 Compartir Tarjeta",
-
-
-
-                lbl_cals: "KCal Quemadas", lbl_goal: "Tiempo para Meta", lbl_time: "Duración",
-
-
-
-                receipt_hd: "Reporte de Resumen de Entrenamiento", receipt_tot: "TOTAL COMBINADO DE SESIÓN",
-
-
-
-                metrics: {
-
-
-
-                    strength: { reps: "Repeticiones", dist: "Carga Aplicada", speed: "Ritmo Tempo" },
-
-
-
-                    cardio: { reps: "Total Pasos", dist: "Distancia", speed: "Velocidad" },
-
-
-
-                    dance: { reps: "Pasos de Baile", dist: "Intensidad", speed: "Estado del Ritmo" }
-
-
-
-                },
-
-
-
-                exercises: {
-
-
-
-                    dance: "Baile / Ritmo Cuerpo Completo", pec_fly: "Aperturas Pecho (Pec Deck)", squats: "Sentadillas (Squats)", pushups: "Lagartijas (Push-ups)",
-
-
-
-                    lat_pulldown: "Polea Espalda (Lat Pulldown)", leg_extension: "Extensión de Piernas", treadmill: "Caminadora / Trotar", air_bike: "Bici de Aire (Air Bike)"
-
-
-
-                },
-
-
-
-                goals: [
-
-
-
-                    { value: "0.5", label: "0.5 kg (~1.1 lbs)" }, { value: "1.0", label: "1.0 kg (~2.2 lbs)" },
-
-
-
-                    { value: "2.0", label: "2.0 kg (~4.4 lbs)" }, { value: "5.0", label: "5.0 kg (~11.0 lbs)" }
-
-
-
-                ],
-
-
-
-                share_title: "Mi Entrenamiento VisionFit", share_text: "¡Mira mi progreso del día!", share_success: "¡Compartido con éxito! 🎉", share_fallback: "Entorno Local: ¡Tarjeta guardada en descargas!"
-
-
-
-            }
-
-
-
-        };
-
-
-
-
-
-
-
-        function applyLanguage() {
-
-
-
-            const currentLang = languageSelector.value;
-
-
-
-            const langData = translations[currentLang];
-
-
-
-            const currentGoal = goalSelector.value || "1.0";
-
-
-
-
-
-
-
-            document.getElementById('main-title').innerText = langData.title;
-
-
-
-            if(!isWorkoutActive && receiptContainer.style.display !== "block") instructions.innerText = langData.init_msg;
-
-
-
-            
-
-
-
-            document.getElementById('lbl-select-exercise').innerText = langData.lbl_ex;
-
-
-
-            document.getElementById('lbl-select-load').innerText = langData.lbl_load;
-
-
-
-            document.getElementById('lbl-select-userweight').innerText = langData.lbl_user;
-
-
-
-            document.getElementById('lbl-select-height').innerText = langData.lbl_height;
-
-
-
-            document.getElementById('lbl-select-goal').innerText = langData.lbl_goal_opt;
-
-
-
-            
-
-
-
-            btnStart.innerText = langData.btn_start;
-
-
-
-            btnPause.innerText = isWorkoutPaused ? langData.btn_resume : langData.btn_pause;
-
-
-
-            btnStop.innerText = langData.btn_stop;
-
-
-
-            btnShare.innerText = langData.btn_share;
-
-
-
-            
-
-
-
-            lblCals.innerText = langData.lbl_cals;
-
-
-
-            lblGoal.innerText = langData.lbl_goal;
-
-
-
-            lblTime.innerText = langData.lbl_time;
-
-
-
-            document.getElementById('receipt-title').innerText = langData.receipt_hd;
-
-
-
-
-
-
-
-            exerciseSelector.innerHTML = "";
-
-
-
-            Object.keys(langData.exercises).forEach(key => {
-
-
-
-                let opt = document.createElement('option'); opt.value = key; opt.innerText = langData.exercises[key];
-
-
-
-                if(key === currentExerciseKey) opt.selected = true;
-
-
-
-                exerciseSelector.appendChild(opt);
-
-
-
-            });
-
-
-
-
-
-
-
-            goalSelector.innerHTML = "";
-
-
-
-            langData.goals.forEach(g => {
-
-
-
-                let opt = document.createElement('option'); opt.value = g.value; opt.innerText = g.label;
-
-
-
-                if(g.value === currentGoal) opt.selected = true;
-
-
-
-                goalSelector.appendChild(opt);
-
-
-
-            });
-
-
-
-
-
-
-
-            updateMetricLabels(currentExerciseKey);
-
-
-
-            if(!isWorkoutActive && receiptContainer.style.display === "block") buildFinalReceiptMarkup();
-
-
-
-        }
-
-
-
-
-
-
-
-        function updateMetricLabels(exerciseType) {
-
-
-
-            const langData = translations[languageSelector.value];
-
-
-
-            let mode = 'strength'; 
-
-
-
-            if (exerciseType === 'dance') mode = 'dance';
-
-
-
-            else if (exerciseType === 'treadmill' || exerciseType === 'air_bike') mode = 'cardio';
-
-
-
-
-
-
-
-            lblReps.innerText = langData.metrics[mode].reps;
-
-
-
-            lblDist.innerText = langData.metrics[mode].dist;
-
-
-
-            lblSpeed.innerText = langData.metrics[mode].speed;
-
-
-
-        }
-
-
-
-
-
-
-
-        languageSelector.addEventListener('change', applyLanguage);
-
-
-
-        applyLanguage();
-
-
-
-
-
-
-
-        function saveCurrentExerciseToHistory() {
-
-
-
-            if (reps > 0 || totalCalories > 0.01) {
-
-
-
-                if (!workoutHistoryLogs[currentExerciseKey]) {
-
-
-
-                    workoutHistoryLogs[currentExerciseKey] = { reps: 0, calories: 0, seconds: 0 };
-
-
-
-                }
-
-
-
-                workoutHistoryLogs[currentExerciseKey].reps += reps;
-
-
-
-                workoutHistoryLogs[currentExerciseKey].calories += parseFloat(txtCals.innerText) - Object.keys(workoutHistoryLogs).reduce((acc, k) => acc + (k !== currentExerciseKey ? workoutHistoryLogs[k].calories : 0), 0);
-
-
-
-                workoutHistoryLogs[currentExerciseKey].seconds += activeExerciseSeconds;
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
-        exerciseSelector.addEventListener('change', () => {
-
-
-
-            const nextEx = exerciseSelector.value;
-
-
-
-            const langData = translations[languageSelector.value];
-
-
-
-            
-
-
-
-            if (isWorkoutActive) {
-
-
-
-                saveCurrentExerciseToHistory();
-
-
-
-                totalSessionSecondsAccumulated += activeExerciseSeconds;
-
-
-
-                reps = 0; activeExerciseSeconds = 0;
-
-
-
-                txtReps.innerText = "0"; txtTime.innerText = "00:00";
-
-
-
-                
-
-
-
-                if (nextEx === 'dance') {
-
-
-
-                    txtDist.innerText = langData.active; txtSpeed.innerText = langData.tracking;
-
-
-
-                } else if (nextEx === 'treadmill' || nextEx === 'air_bike') {
-
-
-
-                    txtDist.innerText = "0.00 km"; txtSpeed.innerText = "0.0 km/h";
-
-
-
-                } else {
-
-
-
-                    txtDist.innerText = inputLoad.value + " kg"; txtSpeed.innerText = "1.0s";
-
-
-
-                }
-
-
-
-            }
-
-
-
-
-
-
-
-            currentExerciseKey = nextEx;
-
-
-
-            if (nextEx === 'air_bike' || nextEx === 'treadmill' || nextEx === 'dance') {
-
-
-
-                inputLoad.disabled = true; inputLoad.style.opacity = "0.4";
-
-
-
-            } else {
-
-
-
-                inputLoad.disabled = false; inputLoad.style.opacity = "1";
-
-
-
-            }
-
-
-
-            updateMetricLabels(nextEx);
-
-
-
-            if(!isWorkoutActive) receiptContainer.style.display = "none";
-
-
-
-        });
-
-
-
-
-
-
-
-        function runLiveTimer() {
-
-
-
-            if (isWorkoutActive && !isWorkoutPaused) {
-
-
-
-                activeExerciseSeconds++;
-
-
-
-                let mins = Math.floor(activeExerciseSeconds / 60);
-
-
-
-                let secs = activeExerciseSeconds % 60;
-
-
-
-                txtTime.innerText = (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
-
-
-
-                calculateGoalEstimation();
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
-        btnStart.addEventListener('click', () => {
-
-
-
-            const langData = translations[languageSelector.value];
-
-
-
-            reps = 0; totalCalories = 0.0; speedTimeHistory = []; lastPositions = {}; workoutStartTime = Date.now();
-
-
-
-            activeExerciseSeconds = 0; totalSessionSecondsAccumulated = 0;
-
-
-
-           workoutHistoryLogs = JSON.parse(localStorage.getItem('visionFitHistory') || "{}");
-currentExerciseKey = exerciseSelector.value;
-
-
-
-
-
-
-
-            txtReps.innerText = "0"; txtTime.innerText = "00:00"; txtCals.innerText = "0.0"; 
-
-
-
-            if (currentExerciseKey === 'dance') {
-
-
-
-                txtDist.innerText = langData.active; txtSpeed.innerText = langData.tracking;
-
-
-
-            } else if (currentExerciseKey === 'treadmill' || currentExerciseKey === 'air_bike') {
-
-
-
-                txtDist.innerText = "0.00 km"; txtSpeed.innerText = "0.0 km/h";
-
-
-
-            } else {
-
-
-
-                txtDist.innerText = inputLoad.value + " kg"; txtSpeed.innerText = "1.0s";
-
-
-
-            }
-
-
-
-            txtGoalTime.innerText = langData.measuring;
-
-
-
-            
-
-
-
-            isWorkoutActive = true; isWorkoutPaused = false;
-
-
-
-            btnPause.disabled = false; btnStop.disabled = false;
-
-
-
-            receiptContainer.style.display = "none"; cameraBox.style.display = "block";
-
-
-
-            instructions.innerText = langData.start;
-
-
-
-
-
-
-
-            if(timerIntervalId) clearInterval(timerIntervalId);
-
-
-
-            timerIntervalId = setInterval(runLiveTimer, 1000);
-
-
-
-        });
-
-
-
-
-
-
-
-        btnPause.addEventListener('click', () => {
-
-
-
-            const langData = translations[languageSelector.value];
-
-
-
-            if (isWorkoutActive && !isWorkoutPaused) {
-
-
-
-                isWorkoutPaused = true; btnPause.innerText = langData.btn_resume; instructions.innerText = langData.pause;
-
-
-
-                txtSpeed.innerText = langData.paused; txtGoalTime.innerText = langData.paused;
-
-
-
-            } else if (isWorkoutActive && isWorkoutPaused) {
-
-
-
-                isWorkoutPaused = false; btnPause.innerText = langData.btn_pause; instructions.innerText = langData.resume;
-
-
-
-                txtSpeed.innerText = exerciseSelector.value === 'dance' ? langData.tracking : "0.0 km/h";
-
-
-
-            }
-
-
-
-        });
-
-
-
-
-
-
-
-        btnStop.addEventListener('click', () => { forceFullStop(); });
-
-
-function forceFullStop() {
-    const langData = translations[languageSelector.value];
-    if(timerIntervalId) clearInterval(timerIntervalId);
-    
-    saveCurrentExerciseToHistory();
-    totalSessionSecondsAccumulated += activeExerciseSeconds;
-
-    // --- NUEVA LÓGICA DE PERSISTENCIA ---
-    // Guardamos historial en localStorage
-    localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
-    
-    // Guardamos los settings actuales (ejercicio, peso, meta, etc.)
-    const currentSettings = {
-        exercise: exerciseSelector.value,
-        loadWeight: inputLoad.value,
-        bodyWeight: inputBodyWeight.value,
-        height: inputHeight.value,
-        goal: goalSelector.value
-    };
-    localStorage.setItem('visionFitSettings', JSON.stringify(currentSettings));
-    // ------------------------------------
-
-    isWorkoutActive = false; isWorkoutPaused = false;
-    btnPause.disabled = true; btnStop.disabled = true;
-    instructions.innerText = langData.stop + " (Saved to history and settings)";
-    txtSpeed.innerText = langData.stopped; 
-    txtGoalTime.innerText = langData.finished;
-
-    cameraBox.style.display = "none";
-    buildFinalReceiptMarkup();
-    receiptContainer.style.display = "block";
-}
-        function formatSecondsToMins(totalSecs) {
-
-
-
-            let m = Math.floor(totalSecs / 60); let s = totalSecs % 60;
-
-
-
-            return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s + " min";
-
-
-
-        }
-
-
-
-
-
-
-
-        // --- 🎯 CORE: BUILD FINAL SUMMARY MARKUP WITH DYNAMIC WEIGHT ESTIMATION IN ENGLISH 🎯 ---
-
-
-
-       function buildFinalReceiptMarkup() {
-    // 1. CARGAMOS EL HISTORIAL MÁS RECIENTE
-    const saved = localStorage.getItem('visionFitHistory');
-    if (saved) workoutHistoryLogs = JSON.parse(saved);
-
-    const langData = translations[languageSelector.value];
-    receiptBreakdown.innerHTML = "";
-    
-    let finalCombinedCalories = 0;
-    let finalCombinedReps = 0;
-
-    // 2. ITERAMOS SOBRE EL HISTORIAL
-    Object.keys(workoutHistoryLogs).forEach(key => {
-        const log = workoutHistoryLogs[key];
-        
-        // Si el log es un objeto de sesión guardada (y no el formato antiguo)
-        // Puedes añadir aquí una lógica para mostrar cada sesión individualmente
-        finalCombinedCalories += log.calories || 0;
-        finalCombinedReps += log.reps || 0;
-
-        let row = document.createElement('div');
-        row.className = "receipt-row";
-        row.innerHTML = `
-            <span><strong>• ${langData.exercises[key] || key}:</strong></span>
-            <span>${log.reps || 0} U | ${(log.calories || 0).toFixed(1)} KCal | ${formatSecondsToMins(log.seconds || 0)}</span>
-        `;
-        receiptBreakdown.appendChild(row);
-    });
-
-
-
-
-
-
-            receiptTotalRow.innerHTML = `
-
-
-
-                <span>🏆 ${langData.receipt_tot}:</span>
-
-
-
-                <span>${finalCombinedCalories.toFixed(1)} KCal | ${formatSecondsToMins(totalSessionSecondsAccumulated)}</span>
-
-
-
-            `;
-
-
-
-
-
-
-
-            // 🧮 CÁLCULO E INYECCIÓN DE LA ESTIMACIÓN DE META EN INGLÉS 🧮
-
-
-
-            const selectedGoalKg = parseFloat(goalSelector.value) || 1.0;
-
-
-
-            const selectedGoalLbs = (selectedGoalKg * 2.20462).toFixed(1);
-
-
-
-            const targetCaloriesToBurn = selectedGoalKg * 7700; // 1kg de grasa oxidada equivale a ~7700 KCal
-
-
-
-
-
-
-
-            if (finalCombinedCalories > 0.5 && totalSessionSecondsAccumulated > 2) {
-
-
-
-                const burnRatePerSecond = finalCombinedCalories / totalSessionSecondsAccumulated;
-
-
-
-                const remainingCaloriesNeeded = targetCaloriesToBurn - finalCombinedCalories;
-
-
-
-                
-
-
-
-                if (remainingCaloriesNeeded > 0) {
-
-
-
-                    const remainingSeconds = remainingCaloriesNeeded / burnRatePerSecond;
-
-
-
-                    const remHours = Math.floor(remainingSeconds / 3600);
-
-
-
-                    const remMins = Math.floor((remainingSeconds % 3600) / 60);
-
-
-
-                    
-
-
-
-                    let timeString = "";
-
-
-
-                    if (remHours > 0) {
-
-
-
-                        timeString = `${remHours} hours and ${remMins} minutes left`;
-
-
-
-                    } else {
-
-
-
-                        timeString = `${remMins} minutes left`;
-
-
-
-                    }
-
-
-
-
-
-
-
-                    // Forzado estrictamente en inglés como pide el requerimiento
-
-
-
-                    receiptGoalEstimationBox.innerHTML = `🎯 <strong>Estimation:</strong> ${timeString} of active workout at this pace to lose the remaining ${selectedGoalKg} kg (${selectedGoalLbs} lbs) target.`;
-
-
-
-                    receiptGoalEstimationBox.style.display = "block";
-
-
-
-                } else {
-
-
-
-                    receiptGoalEstimationBox.innerHTML = `🎉 <strong>Goal Reached!</strong> You have successfully burned enough calories for your weight target during this session!`;
-
-
-
-                    receiptGoalEstimationBox.style.display = "block";
-
-
-
-                }
-
-
-
-            } else {
-
-
-
-                receiptGoalEstimationBox.innerHTML = `🎯 <strong>Estimation:</strong> Incomplete session data to evaluate target weight remaining.`;
-
-
-
-                receiptGoalEstimationBox.style.display = "block";
-
-
-
-            }
-
-
-
-
-
-
-
-            // Sync boxes de arriba
-
-
-
-            txtCals.innerText = finalCombinedCalories.toFixed(1);
-
-
-
-            txtReps.innerText = finalCombinedReps;
-
-
-
-            let finalMins = Math.floor(totalSessionSecondsAccumulated / 60);
-
-
-
-            let finalSecs = totalSessionSecondsAccumulated % 60;
-
-
-
-            txtTime.innerText = (finalMins < 10 ? "0" : "") + finalMins + ":" + (finalSecs < 10 ? "0" : "") + finalSecs;
-
-
-
-        }
-
-
-
-
-
-
-
-        btnShare.addEventListener('click', () => {
-
-
-
-    const langData = translations[languageSelector.value];
-
-
-
-    const targetArea = document.getElementById('workout-card-area');
-
-
-
-    
-
-
-
-    // Mostramos que estamos procesando
-
-
-
-    instructions.innerText = "Processing image...";
-
-
-
-
-
-
-
-    html2canvas(targetArea, { backgroundColor: "#0f0f12", logging: false, useCORS: true }).then(async (canvasSnapshot) => {
-
-
-
-        // Primero intentamos la opción móvil (Share API)
-
-
-
-        if (navigator.canShare && navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)) {
-
-
-
-            canvasSnapshot.toBlob(async (blob) => {
-
-
-
-                const file = new File([blob], `VisionFit_Progress.png`, { type: 'image/png' });
-
-
-
-                try {
-
-
-
-                    await navigator.share({
-
-
-
-                        files: [file],
-
-
-
-                        title: langData.share_title,
-
-
-
-                        text: `${langData.share_text} Burned ${txtCals.innerText} KCal! 🔥`
-
-
-
-                    });
-
-
-
-                    instructions.innerText = langData.share_success;
-
-
-
-                } catch (err) {
-
-
-
-                    // Si el usuario cancela o hay error, descargamos localmente
-
-
-
-                    triggerLocalDownload(canvasSnapshot, langData);
-
-
-
-                }
-
-
-
-            }, 'image/png');
-
-
-
-        } else {
-
-
-
-            // Si estamos en PC, forzamos la descarga directa sin intentar abrir apps
-
-
-
-            triggerLocalDownload(canvasSnapshot, langData);
-
-
-
-        }
-
-
-
-    });
-
-
-
-});
-
-
-
-
-
-
-
-        function triggerLocalDownload(canvas, langData) {
-
-
-
-            const imageFile = canvas.toDataURL("image/png");
-
-
-
-            const downloadLink = document.createElement('a');
-
-
-
-            downloadLink.href = imageFile;
-
-
-
-            downloadLink.download = `VisionFit_Total_Progress.png`;
-
-
-
-            document.body.appendChild(downloadLink);
-
-
-
-            downloadLink.click();
-
-
-
-            document.body.removeChild(downloadLink);
-
-
-
-            instructions.innerText = langData.share_fallback;
-
-
-
-        }
-
-
-
-
-
-
-
-        function calculateAngle(A, B, C) { let radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x); let angle = Math.abs((radians * 180.0) / Math.PI); if (angle > 180.0) angle = 360 - angle; return angle; }
-
-
-
-        
-
-
-
-        function calculateGoalEstimation() { 
-
-
-
-            if (!isWorkoutActive || isWorkoutPaused || totalCalories <= 0.1 || activeExerciseSeconds < 3) return; 
-
-
-
-            const elapsedHours = (activeExerciseSeconds) / 3600; 
-
-
-
-            const hoursRemaining = (parseFloat(goalSelector.value) * 7700) / (totalCalories / elapsedHours); 
-
-
-
-            if (hoursRemaining > 500) { txtGoalTime.innerText = "+500h"; } 
-
-
-
-            else if (hoursRemaining < 1) { txtGoalTime.innerText = Math.round(hoursRemaining * 60) + " min"; } 
-
-
-
-            else { txtGoalTime.innerText = hoursRemaining.toFixed(1) + " hours"; } 
-
-
-
-        }
-
-
-
-        
-
-
-
-        function registerCycleForSpeed() { if(!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; const now = Date.now(); speedTimeHistory.push(now); speedTimeHistory = speedTimeHistory.filter(t => now - t < 4000); if (speedTimeHistory.length > 1) { const userHeightCm = parseFloat(inputHeight.value) || 165; let metersPerCycle = (exerciseSelector.value === 'air_bike') ? (userHeightCm / 100) * 1.5 : (userHeightCm / 100) * 0.415; txtSpeed.innerText = (((speedTimeHistory.length / 4) * metersPerCycle) * 3.6).toFixed(1) + " km/h"; } }
-
-
-
-        setInterval(() => { if (!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; if (speedTimeHistory.length > 0) { const now = Date.now(); speedTimeHistory = speedTimeHistory.filter(t => now - t < 4000); if (speedTimeHistory.length <= 1) { txtSpeed.innerText = "0.0 km/h"; } } }, 1000);
-
-
-
-        
-
-
-
-        function accumulateCalories(exerciseType) {
-
-
-
-            const bodyWt = parseFloat(inputBodyWeight.value) || 65; const loadWt = parseFloat(inputLoad.value) || 0; let totalWorkWeight = bodyWt; let met = 0; let estimatedDurationSeconds = 0;
-
-
-
-            if (exerciseType === 'squats') { met = 5.0; estimatedDurationSeconds = 2.5; } 
-
-
-
-            else if (exerciseType === 'pushups') { met = 4.0; estimatedDurationSeconds = 2.0; } 
-
-
-
-            else if (exerciseType === 'lat_pulldown') { met = 4.5 + (loadWt * 0.05); estimatedDurationSeconds = 2.2; totalWorkWeight += loadWt; } 
-
-
-
-            else if (exerciseType === 'pec_fly') { met = 4.0 + (loadWt * 0.05); estimatedDurationSeconds = 2.5; totalWorkWeight += loadWt; } 
-
-
-
-            else if (exerciseType === 'leg_extension') { met = 4.5 + (loadWt * 0.06); estimatedDurationSeconds = 2.3; totalWorkWeight += loadWt; } 
-
-
-
-            else if (exerciseType === 'treadmill') { met = 3.8; estimatedDurationSeconds = 0.8; } 
-
-
-
-            else if (exerciseType === 'air_bike') { met = 6.0; estimatedDurationSeconds = 1.0; } 
-
-
-
-            else if (exerciseType === 'dance') { met = 6.5; estimatedDurationSeconds = 1.1; } 
-
-
-
-            totalCalories += (met * 3.5 * totalWorkWeight / 200) * (estimatedDurationSeconds / 60); txtCals.innerText = totalCalories.toFixed(1);
-
-
-
-        }
-
-
-
-        
-
-
-
-        function updateDistance(totalCycles) { if(!isWorkoutActive || isWorkoutPaused || exerciseSelector.value === 'dance') return; const userHeightCm = parseFloat(inputHeight.value) || 165; let metersPerCycle = (exerciseSelector.value === 'air_bike') ? (userHeightCm / 100) * 1.5 : (userHeightCm / 100) * 0.415; txtDist.innerText = ((totalCycles * metersPerCycle) / 1000).toFixed(2) + " km"; }
-
-
-
-        function drawPoint(point, color) { canvasCtx.beginPath(); canvasCtx.arc(point.x * canvasElement.width, point.y * canvasElement.height, 5, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); }
-
-
-
-
-
-
-
-        function onResults(results) {
-
-
-
-            canvasCtx.save();
-
-
-
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-
-
-            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-
-
-
-
-
-
-
-            if (results.poseLandmarks) {
-
-
-
-                const selectedExercise = exerciseSelector.value;
-
-
-
-                const hL = results.poseLandmarks[23]; const kL = results.poseLandmarks[25]; const aL = results.poseLandmarks[27];
-
-
-
-                const hR = results.poseLandmarks[24]; const kR = results.poseLandmarks[26]; const aR = results.poseLandmarks[28];
-
-
-
-                const shL = results.poseLandmarks[11]; const elL = results.poseLandmarks[13]; const wrL = results.poseLandmarks[15];
-
-
-
-                const shR = results.poseLandmarks[12]; const elR = results.poseLandmarks[14]; const wrR = results.poseLandmarks[16];
-
-
-
-
-
-
-
-                for(let i = 11; i <= 28; i++) {
-
-
-
-                    if(results.poseLandmarks[i] && results.poseLandmarks[i].visibility > 0.5) {
-
-
-
-                        drawPoint(results.poseLandmarks[i], selectedExercise === 'dance' ? '#cc73ff' : '#00ff88');
-
-
-
-                    }
-
-
-
-                }
-
-
-
-
-
-
-
-                if (!isWorkoutActive || isWorkoutPaused) { canvasCtx.restore(); return; }
-
-
-
-
-
-
-
-                if (selectedExercise === "dance") {
-
-
-
-                    const trackedNodes = [11, 12, 15, 16, 23, 24, 27, 28]; let totalVelocity = 0;
-
-
-
-                    trackedNodes.forEach(nodeId => {
-
-
-
-                        const currentPoint = results.poseLandmarks[nodeId];
-
-
-
-                        if (currentPoint && currentPoint.visibility > 0.5) {
-
-
-
-                            if (lastPositions[nodeId]) { totalVelocity += Math.sqrt(Math.pow(currentPoint.x - lastPositions[nodeId].x, 2) + Math.pow(currentPoint.y - lastPositions[nodeId].y, 2)); }
-
-
-
-                            lastPositions[nodeId] = { x: currentPoint.x, y: currentPoint.y };
-
-
-
-                        }
-
-
-
-                    });
-
-
-
-                    if (totalVelocity > 0.05) txtDist.innerText = totalVelocity > 0.18 ? "🔥 HIGH" : "⚡ MEDIUM";
-
-
-
-                    if (totalVelocity > 0.22 && !danceMoveThreshold) danceMoveThreshold = true;
-
-
-
-                    if (totalVelocity < 0.08 && danceMoveThreshold) { reps++; txtReps.innerText = reps; danceMoveThreshold = false; accumulateCalories('dance'); }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "squats") {
-
-
-
-                    const hip = (hL.visibility > hR.visibility) ? hL : hR; const knee = (kL.visibility > kR.visibility) ? kL : kR; const ankle = (aL.visibility > aR.visibility) ? aL : aR;
-
-
-
-                    if (hip && knee && ankle) {
-
-
-
-                        const angle = calculateAngle(hip, knee, ankle);
-
-
-
-                        if (angle < 115 && !downMovement) downMovement = true;
-
-
-
-                        if (angle > 160 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('squats'); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "pushups") {
-
-
-
-                    const shoulder = (shL.visibility > shR.visibility) ? shL : shR; const elbow = (elL.visibility > elR.visibility) ? elL : elR; const wrist = (wrL.visibility > wrR.visibility) ? wrL : wrR;
-
-
-
-                    if (shoulder && elbow && wrist) {
-
-
-
-                        const angle = calculateAngle(shoulder, elbow, wrist);
-
-
-
-                        if (angle < 95 && !downMovement) downMovement = true;
-
-
-
-                        if (angle > 155 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('pushups'); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "lat_pulldown") {
-
-
-
-                    const wrist = (wrL.visibility > wrR.visibility) ? wrL : wrR; const shoulder = (shL.visibility > shR.visibility) ? shL : shR; const hip = (hL.visibility > hR.visibility) ? hL : hR;
-
-
-
-                    if (wrist && shoulder && hip) {
-
-
-
-                        let dist = Math.sqrt(Math.pow(wrist.x - hip.x, 2) + Math.pow(wrist.y - hip.y, 2));
-
-
-
-                        if (dist < 0.22 && !downMovement) downMovement = true;
-
-
-
-                        if (dist > 0.42 && downMovement) { reps++; txtReps.innerText = reps; downMovement = false; accumulateCalories('lat_pulldown'); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "pec_fly") {
-
-
-
-                    if (wrL && wrR) {
-
-
-
-                        let horizontalSeparationX = Math.abs(wrL.x - wrR.x);
-
-
-
-                        txtSpeed.innerText = (horizontalSeparationX * 2).toFixed(1) + "s";
-
-
-
-                        if (horizontalSeparationX < 0.12 && !inwardMovement) inwardMovement = true;
-
-
-
-                        if (horizontalSeparationX > 0.45 && inwardMovement) { reps++; txtReps.innerText = reps; inwardMovement = false; accumulateCalories('pec_fly'); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "leg_extension") {
-
-
-
-                    const hip = (hL.visibility > hR.visibility) ? hL : hR; const knee = (kL.visibility > kR.visibility) ? kL : kR; const ankle = (aL.visibility > aR.visibility) ? aL : aR;
-
-
-
-                    if (hip && knee && ankle) {
-
-
-
-                        const kneeAngle = calculateAngle(hip, knee, ankle);
-
-
-
-                        if (kneeAngle > 160 && !legExtended) legExtended = true;
-
-
-
-                        if (kneeAngle < 110 && legExtended) { reps++; txtReps.innerText = reps; legExtended = false; accumulateCalories('leg_extension'); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "treadmill") {
-
-
-
-                    if (kL && kR && aL && aR) {
-
-
-
-                        const kneeAngleL = calculateAngle(hL, kL, aL); const kneeAngleR = calculateAngle(hR, kR, aR);
-
-
-
-                        if ((kneeAngleL < 142 || kneeAngleR < 142) && !stepExtended) stepExtended = true;
-
-
-
-                        if (kneeAngleL > 165 && kneeAngleR > 165 && stepExtended) { reps++; txtReps.innerText = reps; stepExtended = false; accumulateCalories('treadmill'); updateDistance(reps); registerCycleForSpeed(); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-                if (selectedExercise === "air_bike") {
-
-
-
-                    const bikeElbow = (elL.visibility > elR.visibility) ? elL : elR;
-
-
-
-                    if (bikeElbow) {
-
-
-
-                        if (bikeElbow.y < 0.4 && !bikeOscillation) bikeOscillation = true;
-
-
-
-                        if (bikeElbow.y > 0.6 && bikeOscillation) { reps++; txtReps.innerText = reps; bikeOscillation = false; accumulateCalories('air_bike'); updateDistance(reps); registerCycleForSpeed(); }
-
-
-
-                    }
-
-
-
-                }
-
-
-
-            }
-
-
-
-            canvasCtx.restore();
-
-
-
-        }
-
-
-
-
-
-
-
-        const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
-
-
-
-        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-
-
-
-        pose.onResults(onResults);
-
-
-
-
-
-
-
-        const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({ image: videoElement }); }, width: 640, height: 480 });
-
-
-
-        camera.start();
-
-// --- LÓGICA DE RECONOCIMIENTO DE VOZ (CONTROL TOTAL) ---
-
-function initVoiceControl() {
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    
-
-    if (!SpeechRecognition) {
-
-        console.log("Reconocimiento de voz no soportado.");
-
-        return;
-
-    }
-
-
-
-    const recognition = new SpeechRecognition();
-
-    recognition.continuous = true;
-
-    recognition.interimResults = false;
-
-    recognition.lang = languageSelector.value === 'es' ? 'es-ES' : 'en-US';
-
-
-
-    recognition.onresult = (event) => {
-
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-
-        console.log("Comando recibido:", transcript);
-
-
-
-        // 1. Comando PAUSAR
-
-        if (transcript.includes("pausa") || transcript.includes("pause")) {
-
-            if (isWorkoutActive && !isWorkoutPaused) {
-
-                btnPause.click(); // Esto dispara tu función de pausa
-
-            }
-
-        } 
-
-        // 2. Comando CONTINUAR (o resumir)
-
-        else if (transcript.includes("continua") || transcript.includes("resume") || transcript.includes("sigue")) {
-
-            if (isWorkoutActive && isWorkoutPaused) {
-
-                btnPause.click(); // Como tu código usa el mismo botón para pausar/resumir, funciona igual
-
-            }
-
-        }
-
-        // 3. Comando STOP (o terminar)
-
-        else if (transcript.includes("stop") || transcript.includes("detener") || transcript.includes("terminar")) {
-
-            if (isWorkoutActive) {
-
-                forceFullStop();
-
-            }
-
-        }
-
-    };
-
-
-
-    recognition.onend = () => {
-
-        setTimeout(() => recognition.start(), 1000);
-
-    };
-
-
-
-    try {
-
-        recognition.start();
-
-    } catch (e) {
-
-        console.log("Micrófono bloqueado por el usuario.");
-
-    }
+  hora: string;
 
 }
 
 
 
-// Inicializamos al cargar la página
+const textos = {
 
-initVoiceControl();
+  es: {
 
-    </script>
+    titulo: 'POMODORO',
+
+    tabPomodoro: 'Pomodoro (25m)',
+
+    tabCorto: 'Corto (5m)',
+
+    tabLargo: 'Largo (15m)',
+
+    tabFluido: '⏱️ Modo Fluido',
+
+    enfoque: '⏱️ Enfoque',
+
+    descanso: '☕ Descanso',
+
+    fluido: '🚀 Tiempo Progresivo',
+
+    preguntaTarea: '¿En qué vas a trabajar ahora?',
+
+    placeholderTarea: 'Ej. Diseñando interfaz...',
+
+    placeholderTiempo: 'Minutos personalizados',
+
+    botonPausar: '⏸️ Pausar Sesión',
+
+    botonIniciar: '▶️ Iniciar',
+
+    botonTerminarFluido: '🏁 Terminar y Guardar',
+
+    historialTitulo: '✅ Historial en la Nube',
+
+    historialVacio: 'Inicia sesión para guardar tus tareas para siempre en internet.',
+
+    completadas: 'completadas',
+
+    alertaFinPomodoro: '¡Excelente trabajo! Ciclo de enfoque completado.',
+
+    alertaFinDescanso: '¡El descanso terminó!',
+
+    alertaFinFluido: 'Sesión de trabajo fluido registrada con éxito.',
+
+    tareaAnonima: 'Sesión de enfoque sin nombre',
+
+    minutosAbrev: 'min',
+
+    segundosAbrev: 's',
+
+    tooltipRepetir: 'Repetir esta tarea',
+
+    loginTexto: '📧 Ingresa tu correo para guardar tu historial:',
+
+    loginBoton: 'Iniciar Sesión / Registrarse',
+
+    loginExito: '¡Revisa tu correo! Te enviamos un enlace de acceso.',
+
+    logoutBoton: '🚪 Cerrar Sesión',
+
+    conectadoComo: 'Conectado como:',
+
+    botonPDF: '📄 Descargar Reporte PDF',
+
+    pdfTitulo: 'REPORTE DE PRODUCTIVIDAD - POMODORO',
+
+    pdfGenerado: 'Generado el:',
+
+    txtRacha: 'Racha Actual:',
+
+    txtSonido: 'Sonido:',
+
+    txtTotal: 'Tiempo Total Enfocado:',
+
+    txtDistribucion: '📊 Distribución de Tareas'
+
+  },
+
+  en: {
+
+    titulo: 'POMODORO',
+
+    tabPomodoro: 'Pomodoro (25m)',
+
+    tabCorto: 'Short Break (5m)',
+
+    tabLargo: 'Long Break (15m)',
+
+    tabFluido: '⏱️ Fluid Mode',
+
+    enfoque: '⏱️ Focus',
+
+    descanso: '☕ Break',
+
+    fluido: '🚀 Stopwatch Time',
+
+    preguntaTarea: 'What are you working on right now?',
+
+    placeholderTarea: 'E.g. Designing UI...',
+
+    placeholderTiempo: 'Custom minutes',
+
+    botonPausar: '⏸️ Pause Session',
+
+    botonIniciar: '▶️ Start',
+
+    botonTerminarFluido: '🏁 Finish & Save',
+
+    historialTitulo: "✅ Cloud History",
+
+    historialVacio: 'Log in to save your tasks forever on the internet.',
+
+    completadas: 'completed',
+
+    alertaFinPomodoro: 'Great job! Focus cycle completed.',
+
+    alertaFinDescanso: 'Break is over!',
+
+    alertaFinFluido: 'Fluid focus session successfully saved.',
+
+    tareaAnonima: 'Unnamed focus session',
+
+    minutosAbrev: 'm',
+
+    segundosAbrev: 's',
+
+    tooltipRepetir: 'Repeat this task',
+
+    loginTexto: '📧 Enter your email to save your history:',
+
+    loginBoton: 'Log In / Sign Up',
+
+    loginExito: 'Check your email! We sent you a magic link.',
+
+    logoutBoton: '🚪 Log Out',
+
+    conectadoComo: 'Logged in as:',
+
+    botonPDF: '📄 Download PDF Report',
+
+    pdfTitulo: 'PRODUCTIVITY REPORT - POMODORO',
+
+    pdfGenerado: 'Generated on:',
+
+    txtTotal: 'Total Focused Time:',
+
+    txtRacha: 'Current Streak:',
+
+    txtSonido: 'Sound:',
+
+    txtDistribucion: '📊 Task Distribution'
+
+  }
+
+};
 
 
 
-</body>
+export default function PomodoroEvolucionado() {
+
+  const [idioma, setIdioma] = useState<'es' | 'en'>('es');
+
+  const [modo, setModo] = useState<'pomodoro' | 'corto' | 'largo' | 'fluido'>('pomodoro');
+
+ 
+
+  const [segundosRestantes, setSegundosRestantes] = useState(25 * 60);
+
+  const [segundosFluido, setSegundosFluido] = useState(0);
+
+ 
+
+  const [tiempoInicialEnSegundos, setTiempoInicialEnSegundos] = useState(25 * 60);
+
+  const [estaActivo, setEstaActivo] = useState(false);
+
+  const [tiempoPersonalizado, setTiempoPersonalizado] = useState('');
 
 
 
-</html> 
+  const [tareaActual, setTareaActual] = useState('');
+
+  const [historial, setHistorial] = useState<TareaHistorial[]>([]);
 
 
 
+  const [racha, setRacha] = useState<number>(0);
+
+  const [tipoSonido, setTipoSonido] = useState<'cocina' | 'zen' | 'silencio'>('cocina');
 
 
-<div id="user-profile" style="margin: 10px; font-size: 0.9rem; color: #00ff88; text-align: center;"></div>
 
-<script>
-    // 1. LÓGICA DE USUARIO
-    let userName = localStorage.getItem('visionFitUserName');
-    if (!userName) {
-        userName = prompt("¡Bienvenido a VisionFit! ¿Cómo te llamas?") || "Atleta";
-        localStorage.setItem('visionFitUserName', userName);
+  const [user, setUser] = useState<any>(null);
+
+  const [emailLogin, setEmailLogin] = useState('');
+
+  const [mensajeLogin, setMensajeLogin] = useState('');
+
+
+
+  const guardandoRef = useRef(false);
+
+  const t = textos[idioma];
+
+
+
+  const coloresGrafico = [
+
+    '#06b6d4', '#10b981', '#0ea5e9', '#6366f1', '#14b8a6', '#3b82f6', '#a855f7'
+
+  ];
+
+const handleGoogleLogin = async () => {
+
+  const { error } = await supabase.auth.signInWithOAuth({
+
+    provider: 'google',
+
+    options: {
+
+      redirectTo: `https://mi-pomodoro.vercel.app/auth/callback`,
+
+    },
+
+  });
+
+  if (error) console.error('Error:', error.message);
+
+};
+
+  useEffect(() => {
+
+    const rachaGuardada = localStorage.getItem('pomodoro_streak');
+
+    const rachaFecha = localStorage.getItem('pomodoro_streak_date');
+
+   
+
+    if (rachaGuardada && rachaFecha) {
+
+      const hoy = new Date().toDateString();
+
+      const ayer = new Date(Date.now() - 86400000).toDateString();
+
+      if (rachaFecha === hoy || rachaFecha === ayer) {
+
+        setRacha(parseInt(rachaGuardada));
+
+      } else {
+
+        setRacha(0);
+
+      }
+
     }
-    document.getElementById('user-profile').innerText = "👤 Atleta: " + userName;
 
-    // 2. FUNCIÓN DE GUARDADO (La única que debe existir)
-    window.forceFullStop = function() {
-        const langData = translations[languageSelector.value];
-        if(timerIntervalId) clearInterval(timerIntervalId);
-        
-        saveCurrentExerciseToHistory();
-        totalSessionSecondsAccumulated += activeExerciseSeconds;
 
-        // Guardar Historial
-        localStorage.setItem('visionFitHistory', JSON.stringify(workoutHistoryLogs));
-        
-        // Guardar Settings
-        const settings = {
-            exercise: exerciseSelector.value,
-            loadWeight: inputLoad.value,
-            bodyWeight: inputBodyWeight.value,
-            height: inputHeight.value,
-            goal: goalSelector.value
-        };
-        localStorage.setItem('visionFitSettings', JSON.stringify(settings));
 
-        isWorkoutActive = false; isWorkoutPaused = false;
-        btnPause.disabled = true; btnStop.disabled = true;
-        instructions.innerText = langData.stop + " (Saved)";
-        txtSpeed.innerText = langData.stopped; 
-        txtGoalTime.innerText = langData.finished;
+    supabase.auth.getUser().then(({ data }: { data: { user: any } }) => {
 
-        cameraBox.style.display = "none";
-        buildFinalReceiptMarkup();
-        receiptContainer.style.display = "block";
-    };
+      setUser(data.user);
 
-    // 3. CARGA AL INICIAR
-    window.addEventListener('load', () => {
-        // Cargar Ajustes
-        const savedSettings = localStorage.getItem('visionFitSettings');
-        if (savedSettings) {
-            const s = JSON.parse(savedSettings);
-            if(s.exercise) { exerciseSelector.value = s.exercise; currentExerciseKey = s.exercise; }
-            if(s.loadWeight) inputLoad.value = s.loadWeight;
-            if(s.bodyWeight) inputBodyWeight.value = s.bodyWeight;
-            if(s.height) inputHeight.value = s.height;
-            if(s.goal) goalSelector.value = s.goal;
-            applyLanguage();
-        }
-        // Cargar Historial
-        const savedHistory = localStorage.getItem('visionFitHistory');
-        if (savedHistory) {
-            workoutHistoryLogs = JSON.parse(savedHistory);
-        }
+      if (data.user) cargarHistorialDeInternet(data.user.id);
+
     });
-</script>
+
+
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+
+        cargarHistorialDeInternet(session.user.id);
+
+      } else {
+
+        setHistorial([]);
+
+      }
+
+    });
+
+
+
+    return () => subscription.unsubscribe();
+
+  }, []);
+
+<button
+
+  onClick={handleGoogleLogin}
+
+  className="w-full h-[45px] bg-[#1a202c] text-white rounded-lg mt-3 hover:bg-[#2d3748] transition border border-cyan-500/40 flex justify-center items-center gap-3 font-medium active:scale-[0.98] shadow-md"
+
+>
+
+  {/* Icono de Google estilizado */}
+
+  <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20" height="20" className="opacity-95" />
+
+  Continuar con Google
+
+</button>
+
+  const cargarHistorialDeInternet = async (userId: string) => {
+
+    const { data, error } = await supabase
+
+      .from('pomodoro_tasks')
+
+      .select('*')
+
+      .eq('user_id', userId)
+
+      .order('created_at', { ascending: false });
+
+
+
+    if (!error && data) {
+
+      const mapeado: TareaHistorial[] = data.map((item: any) => ({
+
+        id: item.id,
+
+        texto: item.texto,
+
+        duracionSegundos: item.duracion,
+
+        hora: new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+      }));
+
+      setHistorial(mapeado);
+
+    }
+
+  };
+
+
+
+  const formatearDuracionReal = (totalSegundos: number) => {
+
+    if (totalSegundos < 60) return `${totalSegundos}${t.segundosAbrev}`;
+
+    const minutos = Math.floor(totalSegundos / 60);
+
+    const segundos = totalSegundos % 60;
+
+    return segundos > 0
+
+      ? `${minutos}${t.minutosAbrev} ${segundos}${t.segundosAbrev}`
+
+      : `${minutos}${t.minutosAbrev}`;
+
+  };
+
+
+
+  const segundosTotalesTrabajados = historial.reduce((acc, item) => acc + item.duracionSegundos, 0);
+
+
+
+  const procesarDatosGrafico = () => {
+
+    const mapaTareas: { [key: string]: number } = {};
+
+    historial.forEach((item) => {
+
+      const nombre = item.texto;
+
+      mapaTareas[nombre] = (mapaTareas[nombre] || 0) + item.duracionSegundos;
+
+    });
+
+
+
+    let porcentajeAcumulado = 0;
+
+    return Object.keys(mapaTareas).map((nombre, index) => {
+
+      const segundos = mapaTareas[nombre];
+
+      const porcentaje = segundosTotalesTrabajados > 0 ? (segundos / segundosTotalesTrabajados) * 100 : 0;
+
+      const color = coloresGrafico[index % coloresGrafico.length];
+
+      const inicio = porcentajeAcumulado;
+
+      porcentajeAcumulado += porcentaje;
+
+
+
+      return { nombre, segundos, porcentaje, color, inicio, fin: porcentajeAcumulado };
+
+    });
+
+  };
+
+
+
+  const datosGrafico = procesarDatosGrafico();
+
+
+
+  const gradienteCSS = datosGrafico.length > 0
+
+    ? `conic-gradient(${datosGrafico.map(d => `${d.color} ${d.inicio}% ${d.fin}%`).join(', ')})`
+
+    : 'conic-gradient(#1e293b 0% 100%)';
+
+
+
+  const reproducirAlarma = () => {
+
+    if (tipoSonido === 'silencio') return;
+
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+
+   
+
+    if (tipoSonido === 'cocina') {
+
+      [0, 0.2, 0.4].forEach((delay) => {
+
+        const osc = ctx.createOscillator();
+
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+
+        osc.frequency.setValueAtTime(880, ctx.currentTime + delay);
+
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.15);
+
+        osc.connect(gain);
+
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + delay);
+
+        osc.stop(ctx.currentTime + delay + 0.15);
+
+      });
+
+    } else if (tipoSonido === 'zen') {
+
+      const osc = ctx.createOscillator();
+
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+
+      osc.frequency.setValueAtTime(293.66, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2.0);
+
+      osc.connect(gain);
+
+      gain.connect(ctx.destination);
+
+      osc.start();
+
+      osc.stop(ctx.currentTime + 2.0);
+
+    }
+
+  };
+
+
+
+  const actualizarRachaDinamica = () => {
+
+    const hoy = new Date().toDateString();
+
+    const rachaFecha = localStorage.getItem('pomodoro_streak_date');
+
+    if (rachaFecha !== hoy) {
+
+      const nuevaRacha = racha + 1;
+
+      setRacha(nuevaRacha);
+
+      localStorage.setItem('pomodoro_streak', nuevaRacha.toString());
+
+      localStorage.setItem('pomodoro_streak_date', hoy);
+
+    }
+
+  };
+
+
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+
+    e.preventDefault();
+
+    setMensajeLogin('');
+
+    const { error } = await supabase.auth.signInWithOtp({
+
+      email: emailLogin,
+
+      options: { emailRedirectTo: 'https://mi-pomodoro.vercel.app/auth/callback' },
+
+    });
+
+    if (error) { alert(error.message); } else { setMensajeLogin(t.loginExito); setEmailLogin(''); }
+
+  };
+
+
+
+  const handleLogout = async () => { await supabase.auth.signOut(); setUser(null); };
+
+
+
+  const cambiarModo = (nuevoModo: 'pomodoro' | 'corto' | 'largo' | 'fluido', minutos: number) => {
+
+    setEstaActivo(false); setModo(nuevoModo); setTiempoPersonalizado('');
+
+    if (nuevoModo === 'fluido') { setSegundosFluido(0); } else { setSegundosRestantes(minutos * 60); setTiempoInicialEnSegundos(minutos * 60); }
+
+  };
+
+
+
+  const aplicarTiempoPersonalizado = (minutosTexto: string) => {
+
+    setTiempoPersonalizado(minutosTexto); const mins = parseInt(minutosTexto);
+
+    if (!isNaN(mins) && mins > 0) { setEstaActivo(false); setModo('pomodoro'); setSegundosRestantes(mins * 60); setTiempoInicialEnSegundos(mins * 60); }
+
+  };
+
+
+
+  const cargarTareaParaRepetir = (textoTarea: string) => { setTareaActual(textoTarea); cambiarModo('pomodoro', 25); };
+
+
+
+  const guardarTareaEnHistorial = (segundosExactos: number) => {
+
+    const textoFinal = tareaActual.trim() || t.tareaAnonima;
+
+
+
+    if (user) {
+
+      supabase.from('pomodoro_tasks').insert([{ user_id: user.id, texto: textoFinal, duracion: segundosExactos }]).then(() => { cargarHistorialDeInternet(user.id); });
+
+    } else {
+
+      const nuevaTareaLocal: TareaHistorial = {
+
+        id: Math.random().toString(),
+
+        texto: textoFinal,
+
+        duracionSegundos: segundosExactos,
+
+        hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+      };
+
+      setHistorial((prev) => [nuevaTareaLocal, ...prev]);
+
+    }
+
+    setTareaActual('');
+
+  };
+
+
+
+  const terminarSesionFluidaManual = () => {
+
+    setEstaActivo(false);
+
+    guardarTareaEnHistorial(segundosFluido);
+
+    actualizarRachaDinamica();
+
+    reproducirAlarma();
+
+    setSegundosFluido(0);
+
+    alert(t.alertaFinFluido);
+
+  };
+
+
+
+  useEffect(() => {
+
+    let intervalo: any = null;
+
+    if (estaActivo) {
+
+      intervalo = setInterval(() => { if (modo === 'fluido') { setSegundosFluido((prev) => prev + 1); } else { setSegundosRestantes((segundos) => segundos - 1); } }, 1000);
+
+    }
+
+    return () => { if (intervalo) clearInterval(intervalo); };
+
+  }, [estaActivo, modo]);
+
+
+
+  useEffect(() => {
+
+    if (modo !== 'fluido' && segundosRestantes === 0 && estaActivo) {
+
+      setEstaActivo(false);
+
+      if (!guardandoRef.current) {
+
+        guardandoRef.current = true; reproducirAlarma();
+
+        if (modo === 'pomodoro') {
+
+          const segundosUtilizados = tiempoInicialEnSegundos;
+
+          guardarTareaEnHistorial(segundosUtilizados); actualizarRachaDinamica(); alert(t.alertaFinPomodoro);
+
+        } else { alert(t.alertaFinDescanso); }
+
+        setTimeout(() => { guardandoRef.current = false; }, 1000);
+
+      }
+
+    }
+
+  }, [segundosRestantes, modo, estaActivo]);
+
+
+
+  const formatearTiempo = (segundos: number) => {
+
+    const minutos = Math.floor(segundos / 60); const secs = segundos % 60;
+
+    return `${minutos.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+  };
+
+
+
+  const exportarAPDF = () => {
+
+    window.print();
+
+  };
+
+
+
+  return (
+
+    <main className="flex min-h-screen flex-col items-center justify-center bg-cyan-950 text-white p-6 relative">
+
+     
+
+      {/* BLOQUE EXCLUSIVO PARA IMPRESIÓN */}
+
+      <div className="hidden print:block w-full text-black p-4 font-sans">
+
+        <h1 className="text-xl font-bold border-b-2 border-slate-800 pb-2 text-center text-slate-800">{t.pdfTitulo}</h1>
+
+        <p className="text-xs text-slate-500 mt-2 text-right">{t.pdfGenerado} {new Date().toLocaleDateString()}</p>
+
+        <p className="text-sm font-bold text-slate-800 mt-2">{t.txtTotal} {formatearDuracionReal(segundosTotalesTrabajados)}</p>
+
+        <table className="w-full mt-4 border-collapse text-sm">
+
+          <thead>
+
+            <tr className="bg-slate-100 border-b border-slate-400 text-left">
+
+              <th className="py-2 px-3 font-bold">✓ Tarea / Task</th>
+
+              <th className="py-2 px-3 font-bold text-center">Duración</th>
+
+              <th className="py-2 px-3 font-bold text-right">Hora</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {historial.map((tarea) => (
+
+              <tr key={tarea.id} className="border-b border-slate-200">
+
+                <td className="py-2 px-3 text-slate-800 font-medium">{tarea.texto}</td>
+
+                <td className="py-2 px-3 text-center text-slate-600 font-mono">{formatearDuracionReal(tarea.duracionSegundos)}</td>
+
+                <td className="py-2 px-3 text-right text-slate-500 font-mono">{tarea.hora}</td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+
+      {/* INTERFAZ WEB NORMAL */}
+
+      <div className="w-full max-w-md flex flex-col gap-4 print:hidden">
+
+       
+
+        {/* PANEL DE CONTROL SUPERIOR */}
+
+        <div className="flex flex-col gap-2 bg-cyan-900/40 p-4 rounded-3xl border border-cyan-800/40 text-xs">
+
+          <div className="flex justify-between items-center">
+
+            {user ? (
+
+              <div className="truncate max-w-[180px]">
+
+                <span className="text-cyan-500 block">{t.conectadoComo}</span>
+
+                <span className="font-semibold text-cyan-200">{user.email}</span>
+
+              </div>
+
+            ) : (
+
+              <span className="text-cyan-500 font-semibold">🔒 Offline Mode</span>
+
+            )}
+
+           
+
+            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-xl font-mono font-bold shadow-inner">
+
+              <span>{t.txtRacha}</span>
+
+              <span className="text-sm">🔥 {racha}</span>
+
+            </div>
+
+          </div>
+
+
+
+          <div className="h-px bg-cyan-800/30 my-1"></div>
+
+
+
+          <div className="flex justify-between items-center">
+
+            <div className="flex items-center gap-1.5 text-cyan-400">
+
+              <span>{t.txtSonido}</span>
+
+              <select value={tipoSonido} onChange={(e) => setTipoSonido(e.target.value as any)} className="bg-cyan-950 border border-cyan-800 text-cyan-200 px-2 py-1 rounded-lg focus:outline-none focus:border-cyan-500 font-medium">
+
+                <option value="cocina">⏰ Timbre</option>
+
+                <option value="zen">🔔 Zen Bell</option>
+
+                <option value="silencio">🔇 Mute</option>
+
+              </select>
+
+            </div>
+
+
+
+            <div className="flex gap-1.5">
+
+              <button onClick={() => setIdioma(idioma === 'es' ? 'en' : 'es')} className="bg-cyan-950 border border-cyan-800 px-2.5 py-1 rounded-xl font-semibold text-cyan-300 hover:bg-cyan-900 transition-all">
+
+                {idioma === 'es' ? '🇺🇸 EN' : '🇪🇸 ES'}
+
+              </button>
+
+              {user && ( <button onClick={handleLogout} className="bg-rose-950/60 border border-rose-900 text-rose-300 px-2.5 py-1 rounded-xl font-semibold hover:bg-rose-900 transition-all">{t.logoutBoton}</button> )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        {/* COMPONENTE DE LOGIN */}
+
+        {!user && (
+
+          <form onSubmit={handleLogin} className="p-5 bg-cyan-900 rounded-3xl border border-cyan-700 shadow-xl flex flex-col gap-3">
+
+            <label className="text-xs font-semibold text-cyan-300 uppercase tracking-wide">{t.loginTexto}</label>
+
+            <div className="flex gap-2">
+
+ <div className="flex flex-col gap-3 w-full mt-4">
+
+  {/* Tu input de correo */}
+
+  <input
+
+    type="email"
+
+    placeholder="tu@correo.com"
+
+    className="w-full p-2 rounded bg-[#0f172a] border border-cyan-500/30 text-white"
+
+  />
+
+ 
+
+  {/* Tu botón de Iniciar Sesión original */}
+
+  <button className="w-full p-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 transition">
+
+    Iniciar Sesión / Registrarse
+
+  </button>
+
+ 
+
+  {/* El nuevo botón de Google */}
+
+<button
+
+  onClick={handleGoogleLogin}
+
+  className="h-[40px] px-3 bg-[#1e293b] text-cyan-100 rounded-lg hover:bg-[#334155] transition border border-cyan-500/40 flex justify-center items-center gap-2 font-medium active:scale-[0.98] shadow-md"
+
+>
+
+  <img
+
+    src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
+
+    alt="Google"
+
+    width="16"
+
+    height="16"
+
+    className="opacity-95"
+
+  />
+
+  <span className="text-sm font-semibold tracking-tight">Continuar con Google</span>
+
+</button>
+
+</div>
+
+            </div>
+
+            {mensajeLogin && <p className="text-emerald-400 text-xs font-medium text-center animate-pulse">{mensajeLogin}</p>}
+
+          </form>
+
+        )}
+
+       
+
+        {/* PANEL PRINCIPAL DEL TEMPORIZADOR */}
+
+        <div className="flex flex-col items-center p-8 bg-cyan-900 rounded-3xl shadow-2xl border border-cyan-700">
+
+          <div className="grid grid-cols-2 gap-1.5 bg-cyan-950 p-1.5 rounded-xl mb-4 w-full text-xs">
+
+            <button onClick={() => cambiarModo('pomodoro', 25)} className={`py-2 rounded-lg font-semibold transition-all ${modo === 'pomodoro' && !tiempoPersonalizado ? 'bg-cyan-500 text-cyan-950 shadow' : 'text-cyan-400 hover:text-white'}`}>{t.tabPomodoro}</button>
+
+            <button onClick={() => cambiarModo('corto', 5)} className={`py-2 rounded-lg font-semibold transition-all ${modo === 'corto' && !tiempoPersonalizado ? 'bg-cyan-500 text-cyan-950 shadow' : 'text-cyan-400 hover:text-white'}`}>{t.tabCorto}</button>
+
+            <button onClick={() => cambiarModo('largo', 15)} className={`py-2 rounded-lg font-semibold transition-all ${modo === 'largo' && !tiempoPersonalizado ? 'bg-cyan-500 text-cyan-950 shadow' : 'text-cyan-400 hover:text-white'}`}>{t.tabLargo}</button>
+
+            <button onClick={() => cambiarModo('fluido', 0)} className={`py-2 rounded-lg font-semibold transition-all ${modo === 'fluido' ? 'bg-emerald-500 text-cyan-950 shadow' : 'text-emerald-400 hover:text-white'}`}>{t.tabFluido}</button>
+
+          </div>
+
+
+
+          {modo !== 'fluido' && (
+
+            <div className="w-full mb-4">
+
+              <input type="number" placeholder={t.placeholderTiempo} value={tiempoPersonalizado} onChange={(e) => aplicarTiempoPersonalizado(e.target.value)} className="w-full bg-cyan-950/50 border border-cyan-800 rounded-lg px-3 py-1.5 text-center text-xs text-cyan-300 placeholder-cyan-700 focus:outline-none focus:border-cyan-500 transition-all" min="1"/>
+
+            </div>
+
+          )}
+
+
+
+          <h1 className="text-sm font-bold tracking-widest text-cyan-400 uppercase mb-1">
+
+            {modo === 'fluido' ? t.fluido : (modo === 'pomodoro' ? t.enfoque : t.descanso)}
+
+          </h1>
+
+         
+
+          <div className={`text-7xl font-mono font-bold my-3 bg-cyan-950 px-6 py-4 rounded-2xl w-full text-center tracking-wider shadow-inner border ${modo === 'fluido' ? 'text-emerald-400 border-emerald-800' : 'text-cyan-400 border-cyan-800'}`}>
+
+            {formatearTiempo(modo === 'fluido' ? segundosFluido : segundosRestantes)}
+
+          </div>
+
+
+
+          {(modo === 'pomodoro' || modo === 'fluido') && (
+
+            <div className="w-full mb-6">
+
+              <label className="block text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-2">{t.preguntaTarea}</label>
+
+              <input type="text" placeholder={t.placeholderTarea} value={tareaActual} onChange={(e) => setTareaActual(e.target.value)} className="w-full bg-cyan-950 border border-cyan-700 rounded-xl px-4 py-3 text-cyan-100 placeholder-cyan-600 focus:outline-none focus:border-cyan-400 transition-all text-sm"/>
+
+            </div>
+
+          )}
+
+
+
+          <div className="w-full flex flex-col gap-2">
+
+            <button onClick={() => setEstaActivo(!estaActivo)} className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform active:scale-95 shadow-lg ${estaActivo ? 'bg-cyan-700 hover:bg-cyan-800 text-cyan-100' : (modo === 'fluido' ? 'bg-emerald-500 hover:bg-emerald-600 text-cyan-950' : 'bg-cyan-500 hover:bg-cyan-600 text-cyan-950')}`}>
+
+              {estaActivo ? t.botonPausar : t.botonIniciar}
+
+            </button>
+
+            {modo === 'fluido' && segundosFluido > 0 && (
+
+              <button onClick={terminarSesionFluidaManual} className="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition-all transform active:scale-95 shadow">
+
+                {t.botonTerminarFluido}
+
+              </button>
+
+            )}
+
+          </div>
+
+        </div>
+
+
+
+        {/* 📊 PANEL DE ANALÍTICAS */}
+
+        {historial.length > 0 && (
+
+          <div className="p-6 bg-cyan-900/50 rounded-3xl border border-cyan-800/60 backdrop-blur flex flex-col items-center gap-4">
+
+            <h3 className="text-xs font-bold tracking-wider text-cyan-300 uppercase w-full text-left">{t.txtDistribucion}</h3>
+
+           
+
+            <div className="flex items-center justify-between w-full bg-cyan-950/60 p-3 rounded-xl border border-cyan-900 text-xs font-semibold">
+
+              <span className="text-cyan-400">{t.txtTotal}</span>
+
+              <span className="text-sm text-cyan-200 font-mono bg-cyan-900 px-2.5 py-1 rounded-lg border border-cyan-700">{formatearDuracionReal(segundosTotalesTrabajados)}</span>
+
+            </div>
+
+
+
+            <div className="flex items-center gap-6 w-full mt-2">
+
+              <div
+
+                className="w-28 h-28 rounded-full shadow-md flex-shrink-0 border border-cyan-950"
+
+                style={{ backgroundImage: gradienteCSS }}
+
+              />
+
+             
+
+              <div className="flex flex-col gap-1.5 flex-1 max-h-28 overflow-y-auto pr-1 text-xs font-medium">
+
+                {datosGrafico.map((d, i) => (
+
+                  <div key={i} className="flex items-center gap-2 truncate">
+
+                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+
+                    <p className="text-cyan-100 truncate flex-1">{d.nombre}</p>
+
+                    <span className="text-cyan-400 font-mono text-[11px] font-bold">{Math.round(d.porcentaje)}%</span>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+
+
+        {/* HISTORIAL Y BOTÓN PDF */}
+
+        <div className="p-6 bg-cyan-900/50 rounded-3xl border border-cyan-800/60 backdrop-blur flex flex-col gap-4">
+
+          <h2 className="text-sm font-bold tracking-wider text-cyan-300 uppercase flex justify-between items-center">
+
+            <span>{t.historialTitulo}</span>
+
+            <span className="bg-cyan-950 text-cyan-400 px-2.5 py-0.5 rounded-full text-xs font-mono font-normal">{historial.length} {t.completadas}</span>
+
+          </h2>
+
+
+
+          {historial.length === 0 ? (
+
+            <p className="text-center text-xs text-cyan-600 py-4 italic">{t.historialVacio}</p>
+
+          ) : (
+
+            <>
+
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+
+                {historial.map((tarea) => (
+
+                  <div key={tarea.id} className="flex items-center justify-between bg-cyan-950/80 p-3 rounded-xl border border-cyan-900/50 text-sm gap-2">
+
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+
+                      <span className="text-emerald-400 font-bold">✓</span>
+
+                      <p className="text-cyan-100 truncate font-medium">{tarea.texto}</p>
+
+                    </div>
+
+                    <div className="flex items-center gap-2">
+
+                      <span className="text-xs font-semibold bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-md border border-cyan-500/30 font-mono">{formatearDuracionReal(tarea.duracionSegundos)}</span>
+
+                      <span className="text-xs text-cyan-500 font-mono bg-cyan-900/40 px-2 py-0.5 rounded">{tarea.hora}</span>
+
+                      <button onClick={() => cargarTareaParaRepetir(tarea.texto)} title={t.tooltipRepetir} className="text-cyan-400 hover:text-cyan-200 bg-cyan-950 p-1 rounded-md border border-cyan-800 hover:bg-cyan-900 transition-all">🔄</button>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+
+
+              {/* Botón corregido con la función exacta */}
+
+              <button onClick={exportarAPDF} className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-cyan-950 font-bold py-2.5 px-4 rounded-xl text-xs transition-all tracking-wide shadow flex items-center justify-center gap-2 border border-cyan-400/30">
+
+                {t.botonPDF}
+
+              </button>
+
+            </>
+
+          )}
+
+        </div>
+
+
+
+      </div>
+
+
+
+      <style jsx global>{`
+
+        @media print {
+
+          body * { visibility: hidden; }
+
+          main, main * { background: transparent !important; color: black !important; }
+
+          .print\:block, .print\:block * { visibility: visible !important; }
+
+          .print\:block { position: absolute; left: 0; top: 0; width: 100%; }
+
+          .print\:hidden { display: none !important; }
+
+        }
+
+      `}</style>
+
+      <footer className="mt-10 flex flex-col items-center gap-4 text-sm text-slate-500">
+
+  <a
+
+    href="https://goodleading.com"
+
+    className="hover:text-[#0d9488] transition-colors duration-200"
+
+  >
+
+    ← Volver a GoodLeading
+
+  </a>
+
+  <a
+
+    href="mailto:tu-email@ejemplo.com?subject=Sugerencia para Pomodoro"
+
+    className="hover:text-[#0d9488] underline transition-colors duration-200"
+
+  >
+
+    ¿Tienes una sugerencia? Envíame un email
+
+  </a>
+
+</footer>
+
+    </main>
+
+  );
+
+} 
+
